@@ -1,0 +1,17 @@
+{
+    "name": "aternos/taskmaster",
+    "description": "Run tasks in parallel",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Aternos\\Taskmaster\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Matthias Neid",
+            "email": "matthias@aternos.org"
+        }
+    ],
+    "require": {}
+}
