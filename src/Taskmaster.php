@@ -60,25 +60,79 @@ class Taskmaster
     /**
      * @return $this
      */
-    public function start(): static
+    public function run(): static
     {
         while ($task = $this->getNextTask()) {
-            $worker = $this->getAvailableWorker();
+            $worker = $this->waitForAvailableWorker();
             $worker->runTask($task);
         }
-        do {
-            $working = 0;
-            foreach ($this->workers as $worker) {
-                $worker->update();
-                if ($worker->getStatus() === WorkerStatus::WORKING) {
-                    $working++;
-                }
-            }
-        } while ($working > 0);
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function wait(): static
+    {
+        while ($this->hasRunningWorkers()) {
+            $this->updateWorkers();
+        }
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function stop(): static
+    {
         foreach ($this->workers as $worker) {
             $worker->stop();
         }
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function hasRunningWorkers(): bool
+    {
+        return count($this->getRunningWorkers()) > 0;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getRunningWorkers(): array
+    {
+        $runningWorkers = [];
+        foreach ($this->workers as $worker) {
+            if ($worker->getStatus() === WorkerStatus::WORKING) {
+                $runningWorkers[] = $worker;
+            }
+        }
+        return $runningWorkers;
+    }
+
+    /**
+     * @return void
+     */
+    protected function updateWorkers(): void
+    {
+        foreach ($this->workers as $worker) {
+            $worker->update();
+        }
+    }
+
+    /**
+     * @return WorkerInterface
+     */
+    protected function waitForAvailableWorker(): WorkerInterface
+    {
+        do {
+            $this->updateWorkers();
+            $worker = $this->getAvailableWorker();
+        } while ($worker === null);
+        return $worker;
     }
 
     /**
@@ -97,14 +151,6 @@ class Taskmaster
             return $worker;
         }
         return null;
-    }
-
-    /**
-     * @return $this
-     */
-    public function wait(): static
-    {
-        return $this;
     }
 
     /**
