@@ -5,6 +5,8 @@ namespace Aternos\Taskmaster;
 use Aternos\Taskmaster\Environment\EnvironmentInterface;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
+use Aternos\Taskmaster\Worker\WorkerInterface;
+use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class Taskmaster
 {
@@ -12,6 +14,12 @@ class Taskmaster
      * @var TaskInterface[]
      */
     protected array $tasks = [];
+
+    /**
+     * @var WorkerInterface[]
+     */
+    protected array $workers = [];
+
     protected ?TaskFactoryInterface $taskFactory = null;
     protected ?EnvironmentInterface $environment = null;
     protected ?int $parallelLimit = null;
@@ -54,8 +62,41 @@ class Taskmaster
      */
     public function start(): static
     {
-        $this->environment->start();
+        while ($task = $this->getNextTask()) {
+            $worker = $this->getAvailableWorker();
+            $worker->runTask($task);
+        }
+        do {
+            $working = 0;
+            foreach ($this->workers as $worker) {
+                $worker->update();
+                if ($worker->getStatus() === WorkerStatus::WORKING) {
+                    $working++;
+                }
+            }
+        } while ($working > 0);
+        foreach ($this->workers as $worker) {
+            $worker->stop();
+        }
         return $this;
+    }
+
+    /**
+     * @return WorkerInterface|null
+     */
+    protected function getAvailableWorker(): ?WorkerInterface
+    {
+        foreach ($this->workers as $worker) {
+            if ($worker->getStatus() === WorkerStatus::IDLE) {
+                return $worker;
+            }
+        }
+        if (count($this->workers) < $this->getParallelLimit()) {
+            $worker = $this->environment->createWorker();
+            $this->workers[] = $worker;
+            return $worker;
+        }
+        return null;
     }
 
     /**
@@ -63,7 +104,6 @@ class Taskmaster
      */
     public function wait(): static
     {
-        $this->environment->wait();
         return $this;
     }
 

@@ -3,19 +3,17 @@
 namespace Aternos\Taskmaster\Environment\Sync;
 
 use Aternos\Taskmaster\Environment\Environment;
+use Aternos\Taskmaster\Worker\WorkerInterface;
 
 class SyncEnvironment extends Environment
 {
-    public function start(): static
-    {
-        while ($task = $this->taskmaster->getNextTask()) {
-            $task->run();
-        }
-        return $this;
-    }
+    protected ?SyncWorker $worker = null;
 
-    public function wait(): static
+    public function createWorker(): WorkerInterface
     {
-        return $this;
+        if ($this->worker === null) {
+            $this->worker = new SyncWorker();
+        }
+        return $this->worker;
     }
 }

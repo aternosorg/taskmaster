@@ -13,5 +13,8 @@
             "email": "matthias@aternos.org"
         }
     ],
-    "require": {}
+    "require": {},
+    "suggest": {
+        "ext-pcntl": "Required for the ForkEnvironment"
+    }
 }

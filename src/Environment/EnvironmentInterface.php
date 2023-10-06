@@ -2,13 +2,9 @@
 
 namespace Aternos\Taskmaster\Environment;
 
-use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\Worker\WorkerInterface;
 
 interface EnvironmentInterface
 {
-    public function setTaskmaster(Taskmaster $taskmaster): static;
-
-    public function start(): static;
-
-    public function wait(): static;
+    public function createWorker(): WorkerInterface;
 }
