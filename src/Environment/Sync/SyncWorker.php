@@ -30,16 +30,6 @@ class SyncWorker extends Worker
         return (new ResponsePromise())->resolve($response);
     }
 
-    /**
-     * @param TaskInterface $task
-     * @return void
-     */
-    public function runTask(TaskInterface $task): void
-    {
-        parent::runTask($task);
-        $this->status = WorkerStatus::IDLE;
-    }
-
     public function stop(): void
     {
     }

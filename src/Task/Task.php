@@ -3,12 +3,13 @@
 namespace Aternos\Taskmaster\Task;
 
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
-use Aternos\Taskmaster\Communication\ResponsePromise;
-use Aternos\Taskmaster\RuntimeInterface;
+use Aternos\Taskmaster\Communication\ResponseDataPromise;
+use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
 use InvalidArgumentException;
 use ReflectionException;
 use ReflectionFunction;
+use Throwable;
 
 abstract class Task implements TaskInterface
 {
@@ -27,10 +28,10 @@ abstract class Task implements TaskInterface
     /**
      * @param string|Closure $function
      * @param mixed ...$arguments
-     * @return mixed
+     * @return ResponseDataPromise
      * @throws ReflectionException
      */
-    protected function call(string|Closure $function, mixed ...$arguments): ResponsePromise
+    protected function callAsync(string|Closure $function, mixed ...$arguments): ResponseDataPromise
     {
         if ($function instanceof Closure) {
             $reflectionFunction = new ReflectionFunction($function);
@@ -41,6 +42,22 @@ abstract class Task implements TaskInterface
         }
 
         $request = new ExecuteFunctionRequest($function, $arguments);
-        return $this->runtime->sendRequest($request);
+        return new ResponseDataPromise($this->runtime->sendRequest($request));
+    }
+
+    /**
+     * @param string|Closure $function
+     * @param mixed ...$arguments
+     * @return mixed
+     * @throws ReflectionException
+     * @throws Throwable
+     */
+    protected function call(string|Closure $function, mixed ...$arguments): mixed
+    {
+        return $this->callAsync($function, ...$arguments)->wait();
+    }
+
+    public function handleResult(mixed $result): void
+    {
     }
 }

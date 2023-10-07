@@ -1,6 +1,6 @@
 <?php
 
-namespace Aternos\Taskmaster;
+namespace Aternos\Taskmaster\Runtime;
 
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
@@ -21,7 +21,7 @@ abstract class Runtime implements RuntimeInterface
     /**
      * @throws Throwable
      */
-    protected function runTask(RunTaskRequest $request): void
+    protected function runTask(RunTaskRequest $request): mixed
     {
         $request->task->setRuntime($this);
         $fiber = new Fiber($request->task->run(...));
@@ -29,5 +29,6 @@ abstract class Runtime implements RuntimeInterface
         while (!$fiber->isTerminated()) {
             $this->update();
         }
+        return $fiber->getReturn();
     }
 }

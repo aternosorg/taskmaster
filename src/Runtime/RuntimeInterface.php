@@ -1,6 +1,6 @@
 <?php
 
-namespace Aternos\Taskmaster;
+namespace Aternos\Taskmaster\Runtime;
 
 
 use Aternos\Taskmaster\Communication\CommunicatorInterface;

@@ -7,6 +7,11 @@
             "Aternos\\Taskmaster\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Aternos\\Taskmaster\\Test\\": "test/"
+        }
+    },
     "authors": [
         {
             "name": "Matthias Neid",

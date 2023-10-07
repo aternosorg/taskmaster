@@ -2,11 +2,13 @@
 
 namespace Aternos\Taskmaster\Task;
 
-use Aternos\Taskmaster\RuntimeInterface;
+use Aternos\Taskmaster\Runtime\RuntimeInterface;
 
 interface TaskInterface
 {
-    public function run(): TaskResult;
+    public function run();
+
+    public function handleResult(mixed $result): void;
 
     public function setRuntime(RuntimeInterface $runtime): static;
 }
