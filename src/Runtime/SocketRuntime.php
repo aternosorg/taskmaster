@@ -2,22 +2,25 @@
 
 namespace Aternos\Taskmaster\Runtime;
 
-use Aternos\Taskmaster\Communication\SocketCommunicatorTrait;
+use Aternos\Taskmaster\Communication\Socket\Socket;
+use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
+use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 
-class SocketRuntime extends Runtime
+class SocketRuntime extends Runtime implements AsyncRuntimeInterface
 {
     use SocketCommunicatorTrait;
 
     /**
-     * @param mixed $readSocket
-     * @param mixed $writeSocket
+     * @param SocketInterface|null $socket
      */
-    public function __construct(protected mixed $readSocket, protected mixed $writeSocket = null)
+    public function __construct(?SocketInterface $socket = null)
     {
-        if ($this->writeSocket === null) {
-            $this->writeSocket = $this->readSocket;
-        }
         parent::__construct();
+        if ($socket === null) {
+            $this->socket = new Socket(fopen("php://fd/3", ""));
+        } else {
+            $this->socket = $socket;
+        }
     }
 
     public function start(): void

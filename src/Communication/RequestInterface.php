@@ -2,7 +2,7 @@
 
 namespace Aternos\Taskmaster\Communication;
 
-interface RequestInterface
+interface RequestInterface extends MessageInterface
 {
     public function getRequestId(): string;
 }

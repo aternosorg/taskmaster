@@ -1,6 +1,6 @@
 <?php
 
-namespace Aternos\Taskmaster\Communication;
+namespace Aternos\Taskmaster\Communication\Promise;
 
 use Closure;
 use Fiber;
@@ -19,6 +19,7 @@ class Promise
     protected array $fibers = [];
 
     protected mixed $value = null;
+    protected bool $resolved = false;
 
     /**
      * @param Closure $callback
@@ -26,7 +27,7 @@ class Promise
      */
     public function then(Closure $callback): static
     {
-        if ($this->value) {
+        if ($this->resolved) {
             $callback($this->value);
             return $this;
         }
@@ -39,8 +40,9 @@ class Promise
      * @return $this
      * @throws Throwable
      */
-    public function resolve(mixed $value): static
+    public function resolve(mixed $value = null): static
     {
+        $this->resolved = true;
         $this->value = $value;
         foreach ($this->successHandlers as $callback) {
             $callback($value);
@@ -57,7 +59,7 @@ class Promise
      */
     public function wait(): mixed
     {
-        if ($this->value !== null) {
+        if ($this->resolved) {
             return $this->value;
         }
         if (!Fiber::getCurrent()) {

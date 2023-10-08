@@ -2,8 +2,8 @@
 
 namespace Aternos\Taskmaster\Task;
 
+use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
-use Aternos\Taskmaster\Communication\ResponseDataPromise;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
 use InvalidArgumentException;

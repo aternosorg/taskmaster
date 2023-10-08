@@ -10,6 +10,6 @@ class ProcessEnvironment extends Environment
 
     public function createWorker(): WorkerInterface
     {
-        return new ProcessWorker();
+        return new ProcessWorker($this->options);
     }
 }

@@ -2,35 +2,38 @@
 
 namespace Aternos\Taskmaster\Environment\Fork;
 
+use Aternos\Taskmaster\Communication\Promise\Promise;
+use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\Worker\SocketWorker;
+use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class ForkWorker extends SocketWorker
 {
-
     protected int $pid;
 
-    public function __construct()
+    public function stop(): void
     {
-        parent::__construct();
-        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+        $this->socket->close();
+        posix_kill($this->pid, SIGTERM);
+    }
+
+    public function start(): Promise
+    {
+        $socketPair = new SocketPair();
         $pid = pcntl_fork();
         if ($pid === -1) {
             throw new \RuntimeException("Could not fork");
         }
         if ($pid === 0) {
-            fclose($sockets[0]);
-            $runtime = new ForkRuntime($sockets[1]);
+            $socketPair->closeParentSocket();
+            $runtime = new ForkRuntime($socketPair->getChildSocket());
             $runtime->start();
             exit(0);
         }
-        fclose($sockets[1]);
-        $this->readSocket = $this->writeSocket = $sockets[0];
+        $socketPair->closeChildSocket();
+        $this->socket = $socketPair->getParentSocket();
         $this->pid = $pid;
-        stream_set_blocking($this->readSocket, false);
-    }
-
-    public function stop(): void
-    {
-        posix_kill($this->pid, SIGTERM);
+        $this->status = WorkerStatus::IDLE;
+        return (new Promise())->resolve();
     }
 }

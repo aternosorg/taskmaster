@@ -9,6 +9,6 @@ class ForkEnvironment extends Environment
 {
     public function createWorker(): WorkerInterface
     {
-        return new ForkWorker();
+        return new ForkWorker($this->options);
     }
 }

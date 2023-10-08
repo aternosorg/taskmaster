@@ -2,30 +2,25 @@
 
 namespace Aternos\Taskmaster\Environment\Process;
 
+use Aternos\Taskmaster\Communication\Promise\Promise;
+use Aternos\Taskmaster\Runtime\RuntimeProcess;
 use Aternos\Taskmaster\Worker\SocketWorker;
+use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class ProcessWorker extends SocketWorker
 {
-    protected mixed $process = null;
-
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->process = proc_open("php " . __DIR__ . "/../../../bin/process.php", [
-            0 => STDIN,
-            1 => STDOUT,
-            2 => STDERR,
-            3 => ["pipe", "r"],
-            4 => ["pipe", "w"]
-        ], $pipes);
-        $this->writeSocket = $pipes[3];
-        $this->readSocket = $pipes[4];
-        stream_set_blocking($this->readSocket, false);
-    }
+    protected RuntimeProcess $process;
 
     public function stop(): void
     {
-        proc_terminate($this->process);
+        $this->process->stop();
+    }
+
+    public function start(): Promise
+    {
+        $this->process = new RuntimeProcess($this->options, ProcessRuntime::class);
+        $this->socket = $this->process->getSocket();
+        $this->status = WorkerStatus::IDLE;
+        return (new Promise())->resolve();
     }
 }

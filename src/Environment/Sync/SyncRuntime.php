@@ -2,9 +2,9 @@
 
 namespace Aternos\Taskmaster\Environment\Sync;
 
+use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\RequestInterface;
 use Aternos\Taskmaster\Communication\ResponseInterface;
-use Aternos\Taskmaster\Communication\ResponsePromise;
 use Aternos\Taskmaster\Runtime\Runtime;
 
 class SyncRuntime extends Runtime

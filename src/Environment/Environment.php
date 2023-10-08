@@ -2,19 +2,19 @@
 
 namespace Aternos\Taskmaster\Environment;
 
-use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\TaskmasterOptions;
 
 abstract class Environment implements EnvironmentInterface
 {
-    protected ?Taskmaster $taskmaster = null;
+    protected ?TaskmasterOptions $options = null;
 
     /**
-     * @param Taskmaster $taskmaster
+     * @param TaskmasterOptions $options
      * @return $this
      */
-    public function setTaskmaster(Taskmaster $taskmaster): static
+    public function setOptions(TaskmasterOptions $options): static
     {
-        $this->taskmaster = $taskmaster;
+        $this->options = $options;
         return $this;
     }
 }

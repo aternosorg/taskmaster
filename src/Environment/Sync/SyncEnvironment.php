@@ -12,7 +12,7 @@ class SyncEnvironment extends Environment
     public function createWorker(): WorkerInterface
     {
         if ($this->worker === null) {
-            $this->worker = new SyncWorker();
+            $this->worker = new SyncWorker($this->options);
         }
         return $this->worker;
     }

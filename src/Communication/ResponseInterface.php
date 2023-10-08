@@ -2,7 +2,7 @@
 
 namespace Aternos\Taskmaster\Communication;
 
-interface ResponseInterface
+interface ResponseInterface extends MessageInterface
 {
     public function getRequestId(): string;
     public function getData(): mixed;
