@@ -26,7 +26,7 @@ class RuntimeProcess
         $socketPair = new SocketPair();
         $this->socket = $socketPair->getParentSocket();
         $this->process = proc_open([
-            "php",
+            $options->getPhpExecutable(),
             static::BIN_PATH,
             $options->getBootstrap(),
             $runtimeClass

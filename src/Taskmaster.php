@@ -229,6 +229,16 @@ class Taskmaster
     }
 
     /**
+     * @param string $phpExecutable
+     * @return $this
+     */
+    public function setPhpExecutable(string $phpExecutable): static
+    {
+        $this->options->setPhpExecutable($phpExecutable);
+        return $this;
+    }
+
+    /**
      * @param ProxyInterface|null $proxy
      * @return $this
      */

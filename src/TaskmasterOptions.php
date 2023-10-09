@@ -11,6 +11,7 @@ class TaskmasterOptions
     ];
 
     protected ?string $bootstrap = null;
+    protected string $phpExecutable = "php";
 
 
     /**
@@ -49,6 +50,24 @@ class TaskmasterOptions
         if (file_exists($bootstrap)) {
             $this->bootstrap = realpath($bootstrap);
         }
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPhpExecutable(): string
+    {
+        return $this->phpExecutable;
+    }
+
+    /**
+     * @param string $phpExecutable
+     * @return $this
+     */
+    public function setPhpExecutable(string $phpExecutable): static
+    {
+        $this->phpExecutable = $phpExecutable;
         return $this;
     }
 }

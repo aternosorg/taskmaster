@@ -63,7 +63,11 @@ abstract class Worker implements WorkerInterface
         $promise = $this->sendRequest($request);
         $promise->then(function (ResponseInterface $response) {
             $this->status = WorkerStatus::IDLE;
-            $this->currentTask->handleResult($response->getData());
+            if ($response instanceof ErrorResponse) {
+                $this->currentTask->handleError($response);
+            } else {
+                $this->currentTask->handleResult($response->getData());
+            }
             $this->currentTask = null;
         })->catch(function (\Exception $exception) {
             $this->status = WorkerStatus::IDLE;
