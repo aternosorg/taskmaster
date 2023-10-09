@@ -128,10 +128,12 @@ class Taskmaster
      */
     protected function update(): void
     {
+        //var_dump("update: taskmaster");
         foreach ($this->workers as $worker) {
             $worker->update();
         }
         $this->proxy?->update();
+        usleep(500);
     }
 
     /**

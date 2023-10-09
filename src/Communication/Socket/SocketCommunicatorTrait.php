@@ -57,6 +57,7 @@ trait SocketCommunicatorTrait
                 $this->promises[$message->getRequestId()]->resolve($message);
             }
         }
+        usleep(500);
     }
 
     /**
