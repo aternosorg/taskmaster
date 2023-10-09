@@ -4,6 +4,8 @@ namespace Aternos\Taskmaster\Runtime;
 
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
+use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
+use Exception;
 use Fiber;
 use Throwable;
 
@@ -25,10 +27,14 @@ abstract class Runtime implements RuntimeInterface
     {
         $request->task->setRuntime($this);
         $fiber = new Fiber($request->task->run(...));
-        $fiber->start();
-        while (!$fiber->isTerminated()) {
-            $this->update();
+        try {
+            $fiber->start();
+            while (!$fiber->isTerminated()) {
+                $this->update();
+            }
+            return $fiber->getReturn();
+        } catch (Exception $exception) {
+            return new ExceptionResponse($request->getRequestId(), $exception);
         }
-        return $fiber->getReturn();
     }
 }

@@ -6,6 +6,8 @@ use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
+use Aternos\Taskmaster\Communication\Response\ErrorResponse;
+use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
@@ -34,7 +36,11 @@ abstract class Worker implements WorkerInterface
     {
         $function = $request->getFunction();
         $arguments = $request->getArguments();
-        return $this->currentTask->$function(...$arguments);
+        try {
+            return $this->currentTask->$function(...$arguments);
+        } catch (\Exception $exception) {
+            return new ExceptionResponse($request->getRequestId(), $exception);
+        }
     }
 
     /**
@@ -58,6 +64,10 @@ abstract class Worker implements WorkerInterface
         $promise->then(function (ResponseInterface $response) {
             $this->status = WorkerStatus::IDLE;
             $this->currentTask->handleResult($response->getData());
+            $this->currentTask = null;
+        })->catch(function (\Exception $exception) {
+            $this->status = WorkerStatus::IDLE;
+            $this->currentTask->handleError(new ExceptionResponse(0, $exception));
             $this->currentTask = null;
         });
         return $promise;

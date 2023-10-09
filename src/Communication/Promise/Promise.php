@@ -3,7 +3,9 @@
 namespace Aternos\Taskmaster\Communication\Promise;
 
 use Closure;
+use Exception;
 use Fiber;
+use ReflectionException;
 use Throwable;
 
 class Promise
@@ -14,12 +16,19 @@ class Promise
     protected array $successHandlers = [];
 
     /**
+     * @var Closure[]
+     */
+    protected array $exceptionHandlers = [];
+
+    /**
      * @var Fiber[]
      */
     protected array $fibers = [];
 
     protected mixed $value = null;
+    protected Exception $exception;
     protected bool $resolved = false;
+    protected bool $failed = false;
 
     /**
      * @param Closure $callback
@@ -32,6 +41,20 @@ class Promise
             return $this;
         }
         $this->successHandlers[] = $callback;
+        return $this;
+    }
+
+    /**
+     * @param Closure $callback
+     * @return $this
+     */
+    public function catch(Closure $callback): static
+    {
+        if ($this->failed) {
+            $callback($this->exception);
+            return $this;
+        }
+        $this->exceptionHandlers[] = $callback;
         return $this;
     }
 
@@ -54,6 +77,45 @@ class Promise
     }
 
     /**
+     * @param Exception $exception
+     * @return $this
+     * @throws Throwable
+     */
+    public function reject(Exception $exception): static
+    {
+        $this->failed = true;
+        $this->exception = $exception;
+        foreach ($this->exceptionHandlers as $callback) {
+            if (!$this->matchesFirstArgument($callback, $exception)) {
+                continue;
+            }
+            $callback($exception);
+        }
+        foreach ($this->fibers as $fiber) {
+            $fiber->throw($exception);
+        }
+        return $this;
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    protected function matchesFirstArgument(Closure $callback, Exception $exception): bool
+    {
+        $reflection = new \ReflectionFunction($callback);
+        $parameters = $reflection->getParameters();
+        if (count($parameters) === 0) {
+            return true;
+        }
+        $firstArgument = $parameters[0];
+        $type = $firstArgument->getType();
+        if ($type === null) {
+            return true;
+        }
+        return is_a($exception, $type->getName());
+    }
+
+    /**
      * @return mixed
      * @throws Throwable
      */
@@ -61,6 +123,9 @@ class Promise
     {
         if ($this->resolved) {
             return $this->value;
+        }
+        if ($this->failed) {
+            throw $this->exception;
         }
         if (!Fiber::getCurrent()) {
             throw new \RuntimeException("Promise::wait() can only be called from within a fiber");

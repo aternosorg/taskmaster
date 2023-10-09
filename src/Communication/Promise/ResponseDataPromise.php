@@ -3,6 +3,7 @@
 namespace Aternos\Taskmaster\Communication\Promise;
 
 use Aternos\Taskmaster\Communication\ResponseInterface;
+use Exception;
 
 class ResponseDataPromise extends Promise
 {
@@ -10,6 +11,8 @@ class ResponseDataPromise extends Promise
     {
         $this->responsePromise->then(function (ResponseInterface $response) {
             $this->resolve($response->getData());
+        })->catch(function (Exception $exception) {
+            $this->reject($exception);
         });
     }
 }

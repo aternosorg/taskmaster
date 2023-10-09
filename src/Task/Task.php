@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Task;
 
 use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
+use Aternos\Taskmaster\Communication\Response\ErrorResponse;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
 use InvalidArgumentException;
@@ -59,5 +60,10 @@ abstract class Task implements TaskInterface
 
     public function handleResult(mixed $result): void
     {
+    }
+
+    public function handleError(ErrorResponse $error): void
+    {
+        fwrite(STDERR, $error->getError() . PHP_EOL);
     }
 }

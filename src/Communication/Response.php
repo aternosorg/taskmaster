@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Communication;
 
 class Response extends Message implements ResponseInterface
 {
-    public function __construct(protected string $requestId, protected mixed $data, ?string $target = null)
+    public function __construct(protected string $requestId, protected mixed $data)
     {
     }
 
