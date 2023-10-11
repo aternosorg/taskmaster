@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Worker;
 
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 
-interface ProxyableWorkerInterface extends WorkerInterface
+interface ProxyableWorkerInstanceInterface extends WorkerInstanceInterface
 {
     public function getId(): string;
 

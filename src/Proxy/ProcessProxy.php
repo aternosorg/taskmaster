@@ -10,7 +10,7 @@ use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInterface;
+use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
 
 class ProcessProxy extends Proxy
 {
@@ -22,19 +22,19 @@ class ProcessProxy extends Proxy
     protected RuntimeProcess $process;
 
     /**
-     * @param ProxyableWorkerInterface $worker
+     * @param ProxyableWorkerInstanceInterface $worker
      * @return ResponsePromise
      */
-    public function startWorker(ProxyableWorkerInterface $worker): ResponsePromise
+    public function startWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
         return $this->sendRequest(new StartWorkerRequest($worker));
     }
 
     /**
-     * @param ProxyableWorkerInterface $worker
+     * @param ProxyableWorkerInstanceInterface $worker
      * @return ResponsePromise
      */
-    public function stopWorker(ProxyableWorkerInterface $worker): ResponsePromise
+    public function stopWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
         return $this->sendRequest(new StopWorkerRequest($worker->getId()));
     }
@@ -48,13 +48,14 @@ class ProcessProxy extends Proxy
     }
 
     /**
-     * @return void
+     * @return $this
      */
-    public function start(): void
+    public function start(): static
     {
         $this->process = new RuntimeProcess($this->options, ProxyRuntime::class);
         $this->proxySocket = new ProxySocket($this->process->getSocket());
         $this->socket = new ProxiedSocket($this->proxySocket, null);
+        return $this;
     }
 
     /**
@@ -65,9 +66,10 @@ class ProcessProxy extends Proxy
         return $this->proxySocket;
     }
 
-    public function stop(): void
+    public function stop(): static
     {
         $this->sendRequest(new TerminateRequest());
         //$this->process->stop();
+        return $this;
     }
 }

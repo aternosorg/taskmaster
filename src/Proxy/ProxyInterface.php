@@ -5,21 +5,21 @@ namespace Aternos\Taskmaster\Proxy;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInterface;
+use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
 
 interface ProxyInterface
 {
     public function setOptions(TaskmasterOptions $options): static;
 
-    public function start(): void;
+    public function start(): static;
 
-    public function stop(): void;
+    public function stop(): static;
 
-    public function update(): void;
+    public function update(): static;
 
-    public function startWorker(ProxyableWorkerInterface $worker): ResponsePromise;
+    public function startWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
 
-    public function stopWorker(ProxyableWorkerInterface $worker): ResponsePromise;
+    public function stopWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
 
     public function getSocket(): SocketInterface;
 

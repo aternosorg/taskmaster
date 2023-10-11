@@ -21,7 +21,7 @@ abstract class Runtime implements RuntimeInterface
         $this->registerRequestHandler(RunTaskRequest::class, $this->runTask(...));
     }
 
-    abstract protected function update(): void;
+    abstract protected function update(): static;
 
     /**
      * @throws Throwable

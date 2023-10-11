@@ -2,11 +2,11 @@
 
 namespace Aternos\Taskmaster;
 
-use Aternos\Taskmaster\Environment\EnvironmentInterface;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
-use Aternos\Taskmaster\Proxy\ProxyWorker;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
+use Aternos\Taskmaster\Worker\WorkerInstance;
+use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
@@ -23,7 +23,6 @@ class Taskmaster
     protected array $workers = [];
 
     protected ?TaskFactoryInterface $taskFactory = null;
-    protected ?EnvironmentInterface $environment = null;
     protected ?int $parallelLimit = null;
     protected TaskmasterOptions $options;
     protected ?ProxyInterface $proxy = null;
@@ -56,24 +55,13 @@ class Taskmaster
     }
 
     /**
-     * @param EnvironmentInterface $environment
-     * @return $this
-     */
-    public function setEnvironment(EnvironmentInterface $environment): static
-    {
-        $environment->setOptions($this->options);
-        $this->environment = $environment;
-        return $this;
-    }
-
-    /**
      * @return $this
      */
     public function run(): static
     {
         while ($task = $this->getNextTask()) {
             $worker = $this->waitForAvailableWorker();
-            $worker->runTask($task);
+            $worker->assignTask($task);
         }
         return $this;
     }
@@ -95,7 +83,7 @@ class Taskmaster
     public function stop(): static
     {
         foreach ($this->workers as $worker) {
-            $worker->stop();
+            $worker->getInstance()->stop();
         }
         $this->proxy?->stop();
         return $this;
@@ -128,7 +116,6 @@ class Taskmaster
      */
     protected function update(): void
     {
-        //var_dump("update: taskmaster");
         foreach ($this->workers as $worker) {
             $worker->update();
         }
@@ -153,37 +140,25 @@ class Taskmaster
      */
     protected function getAvailableWorker(): ?WorkerInterface
     {
-        $hasStartingWorker = false;
         foreach ($this->workers as $worker) {
             if ($worker->getStatus() === WorkerStatus::IDLE) {
                 return $worker;
             }
-            if ($worker->getStatus() === WorkerStatus::STARTING) {
-                $hasStartingWorker = true;
-            }
-        }
-        if ($hasStartingWorker) {
-            return null;
-        }
-        if (count($this->workers) < $this->getParallelLimit()) {
-            $worker = $this->createWorker();
-            $worker->init();
-            $worker->start();
-            $this->workers[] = $worker;
         }
         return null;
     }
 
     /**
-     * @return WorkerInterface
+     * @param WorkerInterface[] $workers
+     * @return $this
      */
-    protected function createWorker(): WorkerInterface
+    public function setWorkers(array $workers): static
     {
-        $worker = $this->environment->createWorker();
-        if ($this->proxy) {
-            $worker = (new ProxyWorker($this->options))->setWorker($worker)->setProxy($this->proxy);
+        foreach ($workers as $worker) {
+            $worker->setTaskmaster($this);
         }
-        return $worker;
+        $this->workers = $workers;
+        return $this;
     }
 
     /**
@@ -247,6 +222,14 @@ class Taskmaster
         $proxy->setOptions($this->options)->start();
         $this->proxy = $proxy;
         return $this;
+    }
+
+    /**
+     * @return ProxyInterface|null
+     */
+    public function getProxy(): ?ProxyInterface
+    {
+        return $this->proxy;
     }
 
     public function getOptions(): TaskmasterOptions

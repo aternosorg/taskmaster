@@ -40,10 +40,10 @@ trait SocketCommunicatorTrait
     }
 
     /**
-     * @return void
+     * @return SocketCommunicatorTrait
      * @throws Throwable
      */
-    public function update(): void
+    public function update(): static
     {
         foreach ($this->socket->receiveMessages() as $message) {
             if ($message instanceof RequestInterface) {
@@ -58,6 +58,7 @@ trait SocketCommunicatorTrait
             }
         }
         usleep(500);
+        return $this;
     }
 
     /**

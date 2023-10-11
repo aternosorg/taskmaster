@@ -2,79 +2,56 @@
 
 namespace Aternos\Taskmaster\Worker;
 
-use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
-use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
-use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
-use Aternos\Taskmaster\Communication\RequestHandlingTrait;
-use Aternos\Taskmaster\Communication\Response\ErrorResponse;
-use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
-use Aternos\Taskmaster\Communication\ResponseInterface;
+use Aternos\Taskmaster\Proxy\ProxyWorker;
 use Aternos\Taskmaster\Task\TaskInterface;
-use Aternos\Taskmaster\TaskmasterOptions;
+use Aternos\Taskmaster\Taskmaster;
 
 abstract class Worker implements WorkerInterface
 {
-    use RequestHandlingTrait;
+    protected Taskmaster $taskmaster;
+    protected ?WorkerInstanceInterface $instance = null;
 
-    protected WorkerStatus $status = WorkerStatus::STARTING;
-    protected ?TaskInterface $currentTask = null;
-
-    public function __construct(protected TaskmasterOptions $options)
+    /**
+     * @param Taskmaster $taskmaster
+     * @return $this
+     */
+    public function setTaskmaster(Taskmaster $taskmaster): static
     {
-    }
-
-    public function init(): void
-    {
-        $this->registerRequestHandler(ExecuteFunctionRequest::class, $this->handleExecuteFunctionRequest(...));
+        $this->taskmaster = $taskmaster;
+        return $this;
     }
 
     /**
-     * @param ExecuteFunctionRequest $request
-     * @return mixed
+     * @return WorkerInstanceInterface
      */
-    protected function handleExecuteFunctionRequest(ExecuteFunctionRequest $request): mixed
+    public function getInstance(): WorkerInstanceInterface
     {
-        $function = $request->getFunction();
-        $arguments = $request->getArguments();
-        try {
-            return $this->currentTask->$function(...$arguments);
-        } catch (\Exception $exception) {
-            return new ExceptionResponse($request->getRequestId(), $exception);
-        }
-    }
-
-    /**
-     * @param TaskInterface $task
-     * @return ResponsePromise
-     */
-    public function runTask(TaskInterface $task): ResponsePromise
-    {
-        $this->status = WorkerStatus::WORKING;
-        $this->currentTask = $task;
-        return $this->sendRunTaskRequest(new RunTaskRequest($task));
-    }
-
-    /**
-     * @param RunTaskRequest $request
-     * @return ResponsePromise
-     */
-    protected function sendRunTaskRequest(RunTaskRequest $request): ResponsePromise
-    {
-        $promise = $this->sendRequest($request);
-        $promise->then(function (ResponseInterface $response) {
-            $this->status = WorkerStatus::IDLE;
-            if ($response instanceof ErrorResponse) {
-                $this->currentTask->handleError($response);
-            } else {
-                $this->currentTask->handleResult($response->getData());
+        if ($this->instance === null) {
+            $this->instance = $this->createInstance();
+            if ($proxy = $this->taskmaster->getProxy()) {
+                $this->instance = (new ProxyWorker($this->taskmaster->getOptions()))->setWorker($this->instance)->setProxy($proxy);
             }
-            $this->currentTask = null;
-        })->catch(function (\Exception $exception) {
-            $this->status = WorkerStatus::IDLE;
-            $this->currentTask->handleError(new ExceptionResponse(0, $exception));
-            $this->currentTask = null;
-        });
-        return $promise;
+            $this->instance->init()->start();
+        }
+        return $this->instance;
+    }
+
+    /**
+     * @return $this
+     */
+    public function update(): static
+    {
+        $this->getInstance()->update();
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function stop(): static
+    {
+        $this->getInstance()->stop();
+        return $this;
     }
 
     /**
@@ -82,6 +59,18 @@ abstract class Worker implements WorkerInterface
      */
     public function getStatus(): WorkerStatus
     {
-        return $this->status;
+        return $this->getInstance()->getStatus();
     }
+
+    /**
+     * @param TaskInterface $task
+     * @return $this
+     */
+    public function assignTask(TaskInterface $task): static
+    {
+        $this->getInstance()->runTask($task);
+        return $this;
+    }
+
+    abstract protected function createInstance(): WorkerInstanceInterface;
 }

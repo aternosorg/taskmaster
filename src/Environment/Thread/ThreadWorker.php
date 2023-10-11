@@ -1,38 +1,14 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php
 
 namespace Aternos\Taskmaster\Environment\Thread;
 
-use Aternos\Taskmaster\Communication\Promise\Promise;
-use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
-use Aternos\Taskmaster\Worker\SocketWorker;
-use Aternos\Taskmaster\Worker\WorkerStatus;
-use parallel\Channel;
-use parallel\Runtime;
+use Aternos\Taskmaster\Worker\Worker;
+use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
 
-class ThreadWorker extends SocketWorker
+class ThreadWorker extends Worker
 {
-    /**
-     * @var ResponsePromise[]
-     */
-    protected array $promises = [];
-    protected Runtime $runtime;
-
-    public function start(): Promise
+    public function createInstance(): WorkerInstanceInterface
     {
-        $this->runtime = new Runtime($this->options->getBootstrap());
-        $channelPair = new ChannelPair();
-        $this->socket = $channelPair->getParentSocket();
-
-        $this->runtime->run(function (Channel $sender, Channel $receiver) {
-            (new ThreadRuntime(new ChannelSocket($sender, $receiver)))->start();
-        }, $channelPair->getChildSocket()->getChannels());
-
-        $this->status = WorkerStatus::IDLE;
-        return (new Promise())->resolve();
-    }
-
-    public function stop(): void
-    {
-        $this->runtime->kill();
+        return new ThreadWorkerInstance($this->taskmaster->getOptions());
     }
 }

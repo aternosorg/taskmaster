@@ -8,7 +8,7 @@ use Aternos\Taskmaster\Communication\Request\TerminateRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Runtime\AsyncRuntimeInterface;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInterface;
+use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
 
 class ProxyRuntime implements AsyncRuntimeInterface
 {
@@ -16,7 +16,7 @@ class ProxyRuntime implements AsyncRuntimeInterface
     use RequestHandlingTrait;
 
     /**
-     * @var ProxyableWorkerInterface[]
+     * @var ProxyableWorkerInstanceInterface[]
      */
     protected array $workers = [];
 

@@ -7,17 +7,17 @@ use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInterface;
-use Aternos\Taskmaster\Worker\Worker;
+use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\WorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
-class ProxyWorker extends Worker
+class ProxyWorker extends WorkerInstance
 {
     use SocketCommunicatorTrait;
 
     protected WorkerStatus $status = WorkerStatus::STARTING;
     protected string $id;
-    protected ProxyableWorkerInterface $worker;
+    protected ProxyableWorkerInstanceInterface $worker;
     protected ProxyInterface $proxy;
 
     public function __construct(TaskmasterOptions $options)
@@ -26,10 +26,10 @@ class ProxyWorker extends Worker
     }
 
     /**
-     * @param ProxyableWorkerInterface $worker
+     * @param ProxyableWorkerInstanceInterface $worker
      * @return $this
      */
-    public function setWorker(ProxyableWorkerInterface $worker): static
+    public function setWorker(ProxyableWorkerInstanceInterface $worker): static
     {
         $this->id = $worker->getId();
         $this->worker = $worker;
@@ -62,13 +62,14 @@ class ProxyWorker extends Worker
     }
 
     /**
-     * @return void
+     * @return $this
      */
-    public function update(): void
+    public function update(): static
     {
         if ($this->getStatus() !== WorkerStatus::STARTING) {
             $this->worker->update();
         }
+        return $this;
     }
 
     public function getStatus(): WorkerStatus
@@ -81,8 +82,12 @@ class ProxyWorker extends Worker
         return $this->worker->runTask($task);
     }
 
-    public function stop(): void
+    /**
+     * @return $this
+     */
+    public function stop(): static
     {
         $this->proxy->stopWorker($this->worker);
+        return $this;
     }
 }

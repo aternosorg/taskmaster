@@ -10,7 +10,7 @@ use Aternos\Taskmaster\Runtime\Runtime;
 class SyncRuntime extends Runtime
 {
 
-    public function __construct(protected SyncWorker $worker)
+    public function __construct(protected SyncWorkerInstance $worker)
     {
         parent::__construct();
     }

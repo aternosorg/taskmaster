@@ -1,39 +1,14 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php
 
 namespace Aternos\Taskmaster\Environment\Fork;
 
-use Aternos\Taskmaster\Communication\Promise\Promise;
-use Aternos\Taskmaster\Communication\Socket\SocketPair;
-use Aternos\Taskmaster\Worker\SocketWorker;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\Worker;
+use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
 
-class ForkWorker extends SocketWorker
+class ForkWorker extends Worker
 {
-    protected int $pid;
-
-    public function stop(): void
+    public function createInstance(): WorkerInstanceInterface
     {
-        $this->socket->close();
-        posix_kill($this->pid, SIGTERM);
-    }
-
-    public function start(): Promise
-    {
-        $socketPair = new SocketPair();
-        $pid = pcntl_fork();
-        if ($pid === -1) {
-            throw new \RuntimeException("Could not fork");
-        }
-        if ($pid === 0) {
-            $socketPair->closeParentSocket();
-            $runtime = new ForkRuntime($socketPair->getChildSocket());
-            $runtime->start();
-            exit(0);
-        }
-        $socketPair->closeChildSocket();
-        $this->socket = $socketPair->getParentSocket();
-        $this->pid = $pid;
-        $this->status = WorkerStatus::IDLE;
-        return (new Promise())->resolve();
+        return new ForkWorkerInstance($this->taskmaster->getOptions());
     }
 }

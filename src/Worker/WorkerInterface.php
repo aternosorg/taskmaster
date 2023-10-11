@@ -2,25 +2,15 @@
 
 namespace Aternos\Taskmaster\Worker;
 
-use Aternos\Taskmaster\Communication\CommunicatorInterface;
-use Aternos\Taskmaster\Communication\Promise\Promise;
-use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Task\TaskInterface;
-use Aternos\Taskmaster\TaskmasterOptions;
+use Aternos\Taskmaster\Taskmaster;
 
-interface WorkerInterface extends CommunicatorInterface
+interface WorkerInterface
 {
-    public function __construct(TaskmasterOptions $options);
-
-    public function init(): void;
-
-    public function start(): Promise;
-
+    public function setTaskmaster(Taskmaster $taskmaster): static;
+    public function getInstance(): WorkerInstanceInterface;
+    public function update(): static;
+    public function stop(): static;
     public function getStatus(): WorkerStatus;
-
-    public function runTask(TaskInterface $task): ResponsePromise;
-
-    public function update(): void;
-
-    public function stop(): void;
+    public function assignTask(TaskInterface $task): static;
 }

@@ -6,7 +6,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
 
-abstract class SocketWorker extends Worker implements ProxyableWorkerInterface
+abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableWorkerInstanceInterface
 {
     use SocketCommunicatorTrait;
 
