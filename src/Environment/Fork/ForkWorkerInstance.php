@@ -6,10 +6,11 @@ use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\Worker\SocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
+use Throwable;
 
 class ForkWorkerInstance extends SocketWorkerInstance
 {
-    protected int $pid;
+    protected ?int $pid = null;
 
     public function stop(): static
     {
@@ -36,5 +37,17 @@ class ForkWorkerInstance extends SocketWorkerInstance
         $this->pid = $pid;
         $this->status = WorkerStatus::IDLE;
         return (new Promise())->resolve();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasDied(): bool
+    {
+        if (!$this->pid) {
+            return false;
+        }
+        $res = pcntl_waitpid($this->pid, $status, WNOHANG);
+        return $res === -1 || $res > 0;
     }
 }

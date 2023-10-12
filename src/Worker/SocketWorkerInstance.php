@@ -2,13 +2,16 @@
 
 namespace Aternos\Taskmaster\Worker;
 
+use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
 
 abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableWorkerInstanceInterface
 {
-    use SocketCommunicatorTrait;
+    use SocketCommunicatorTrait {
+        update as socketUpdate;
+    }
 
     protected string $id;
 
@@ -16,6 +19,21 @@ abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableW
     {
         parent::__construct($options);
         $this->id = uniqid();
+    }
+
+    public function init(): static
+    {
+        $this->registerRequestHandler(WorkerDiedRequest::class, $this->handleWorkerDiedRequest(...));
+        return parent::init();
+    }
+
+    /**
+     * @param WorkerDiedRequest $request
+     * @return void
+     */
+    protected function handleWorkerDiedRequest(WorkerDiedRequest $request): void
+    {
+        $this->handleFail($request->getReason());
     }
 
     /**
@@ -47,6 +65,17 @@ abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableW
     public function setStatus(WorkerStatus $status): static
     {
         $this->status = $status;
+        return $this;
+    }
+
+    public function update(): static
+    {
+        $this->socketUpdate();
+        if ($this->status === WorkerStatus::IDLE || $this->status === WorkerStatus::WORKING) {
+            if ($this->hasDied()) {
+                $this->handleFail("Worker exited unexpectedly.");
+            }
+        }
         return $this;
     }
 }

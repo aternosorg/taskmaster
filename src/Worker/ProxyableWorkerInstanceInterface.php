@@ -13,4 +13,6 @@ interface ProxyableWorkerInstanceInterface extends WorkerInstanceInterface
     public function setSocket(SocketInterface $socket): static;
 
     public function setStatus(WorkerStatus $status): static;
+
+    public function hasDied(): bool;
 }

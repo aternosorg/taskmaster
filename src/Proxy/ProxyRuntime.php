@@ -5,8 +5,11 @@ namespace Aternos\Taskmaster\Proxy;
 use Aternos\Taskmaster\Communication\Request\StartWorkerRequest;
 use Aternos\Taskmaster\Communication\Request\StopWorkerRequest;
 use Aternos\Taskmaster\Communication\Request\TerminateRequest;
+use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
+use Aternos\Taskmaster\Communication\Socket\SocketReadException;
+use Aternos\Taskmaster\Communication\Socket\SocketWriteException;
 use Aternos\Taskmaster\Runtime\AsyncRuntimeInterface;
 use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
 
@@ -76,13 +79,39 @@ class ProxyRuntime implements AsyncRuntimeInterface
     protected function pipe(): void
     {
         foreach ($this->proxySocket->getUnhandledMessages() as $message) {
-            $this->workers[$message->getId()]?->getSocket()->sendRaw($message->getMessageString());
+            $worker = $this->workers[$message->getId()] ?? null;
+            if (!$worker) {
+                continue;
+            }
+            try {
+                $this->workers[$message->getId()]?->getSocket()->sendRaw($message->getMessageString());
+            } catch (SocketWriteException $e) {
+                $this->proxySocket->sendProxyMessage($worker->getId(), new WorkerDiedRequest($e->getMessage()));
+                $worker->stop();
+                unset($this->workers[$worker->getId()]);
+            }
         }
         $this->proxySocket->clearUnhandledMessages();
         foreach ($this->workers as $worker) {
-            foreach ($worker->getSocket()->receiveRaw() as $data) {
-                $this->proxySocket->sendProxyMessage($worker->getId(), $data);
+            try {
+                foreach ($worker->getSocket()->receiveRaw() as $data) {
+                    $this->proxySocket->sendProxyMessage($worker->getId(), $data);
+                }
+            } catch (SocketReadException $e) {
+                $this->proxySocket->sendProxyMessage($worker->getId(), new WorkerDiedRequest($e->getMessage()));
+                $worker->stop();
+                unset($this->workers[$worker->getId()]);
             }
         }
+    }
+
+    /**
+     * @param string|null $reason
+     * @return $this
+     */
+    protected function handleFail(?string $reason = null): static
+    {
+        fwrite(STDERR, "Proxy runtime failed: " . $reason . PHP_EOL);
+        exit(1);
     }
 }

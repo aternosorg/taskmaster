@@ -26,7 +26,7 @@ abstract class Worker implements WorkerInterface
      */
     public function getInstance(): WorkerInstanceInterface
     {
-        if ($this->instance === null) {
+        if ($this->instance === null || $this->instance->getStatus() === WorkerStatus::FAILED) {
             $this->instance = $this->createInstance();
             if ($proxy = $this->taskmaster->getProxy()) {
                 $this->instance = (new ProxyWorker($this->taskmaster->getOptions()))->setWorker($this->instance)->setProxy($proxy);

@@ -65,6 +65,9 @@ class Promise
      */
     public function resolve(mixed $value = null): static
     {
+        if ($this->resolved) {
+            return $this;
+        }
         $this->resolved = true;
         $this->value = $value;
         foreach ($this->successHandlers as $callback) {
@@ -83,6 +86,9 @@ class Promise
      */
     public function reject(Exception $exception): static
     {
+        if ($this->failed) {
+            return $this;
+        }
         $this->failed = true;
         $this->exception = $exception;
         foreach ($this->exceptionHandlers as $callback) {

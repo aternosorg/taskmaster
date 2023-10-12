@@ -21,6 +21,7 @@ class Socket implements SocketInterface
     /**
      * @param MessageInterface $message
      * @return bool
+     * @throws SocketWriteException
      */
     public function sendMessage(MessageInterface $message): bool
     {
@@ -29,6 +30,7 @@ class Socket implements SocketInterface
 
     /**
      * @return Generator
+     * @throws SocketReadException
      */
     public function receiveMessages(): Generator
     {
@@ -39,13 +41,21 @@ class Socket implements SocketInterface
 
     /**
      * @return Generator<string>
+     * @throws SocketReadException
      */
     public function receiveRaw(): Generator
     {
-        while ($result = fgets($this->socket)) {
-            $result = base64_decode($result);
-            yield $result;
-        }
+        do {
+            if (!is_resource($this->socket) || feof($this->socket)) {
+                throw new SocketReadException("Could not read from socket.");
+            }
+            $result = fgets($this->socket);
+            if (!$result) {
+                break;
+            }
+            $decoded = base64_decode($result);
+            yield $decoded;
+        } while (true);
     }
 
     /**
@@ -61,12 +71,16 @@ class Socket implements SocketInterface
      */
     public function close(): void
     {
+        if (!is_resource($this->socket)) {
+            return;
+        }
         fclose($this->socket);
     }
 
     /**
      * @param string $data
      * @return bool
+     * @throws SocketWriteException
      */
     public function sendRaw(string $data): bool
     {
@@ -75,6 +89,18 @@ class Socket implements SocketInterface
         }
         $data = base64_encode($data);
         $data .= PHP_EOL;
-        return fwrite($this->socket, $data) !== false;
+        $total = 0;
+        $expected = strlen($data);
+        do {
+            if (!is_resource($this->socket) || feof($this->socket)) {
+                throw new SocketWriteException("Could not write to socket.");
+            }
+            $result = @fwrite($this->socket, $data);
+            if ($result === false || $result === 0) {
+                throw new SocketWriteException("Could not write to socket.");
+            }
+            $total += $result;
+        } while ($total < $expected);
+        return true;
     }
 }

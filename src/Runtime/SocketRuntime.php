@@ -6,6 +6,7 @@ use Aternos\Taskmaster\Communication\Response\PhpErrorResponse;
 use Aternos\Taskmaster\Communication\Socket\Socket;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
+use Aternos\Taskmaster\Communication\Socket\SocketWriteException;
 
 class SocketRuntime extends Runtime implements AsyncRuntimeInterface
 {
@@ -38,7 +39,11 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
             return;
         }
         $response = new PhpErrorResponse($this->currentTaskRequest->getRequestId(), $errstr, $errno, $errfile, $errline);
-        $this->socket->sendMessage($response);
+        try {
+            $this->socket->sendMessage($response);
+        } catch (SocketWriteException $e) {
+            $this->handleFail($e->getMessage());
+        }
         exit(1);
     }
 
@@ -47,5 +52,15 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
         while (true) {
             $this->update();
         }
+    }
+
+    /**
+     * @param string|null $reason
+     * @return $this
+     */
+    protected function handleFail(?string $reason = null): static
+    {
+        fwrite(STDERR, "Runtime failed: " . $reason . PHP_EOL);
+        exit(1);
     }
 }

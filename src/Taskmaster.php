@@ -83,7 +83,7 @@ class Taskmaster
     public function stop(): static
     {
         foreach ($this->workers as $worker) {
-            $worker->getInstance()->stop();
+            $worker->stop();
         }
         $this->proxy?->stop();
         return $this;

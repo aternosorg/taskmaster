@@ -72,4 +72,9 @@ class ProcessProxy extends Proxy
         //$this->process->stop();
         return $this;
     }
+
+    protected function handleFail(?string $reason = null): static
+    {
+        // TODO: handle proxy fail
+    }
 }

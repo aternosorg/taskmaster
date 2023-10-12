@@ -22,7 +22,11 @@ trait SocketCommunicatorTrait
      */
     public function sendRequest(RequestInterface $request): ResponsePromise
     {
-        $this->socket->sendMessage($request);
+        try {
+            $this->socket->sendMessage($request);
+        } catch (SocketWriteException $e) {
+            $this->handleFail($e->getMessage());
+        }
         return $this->getPromise($request);
     }
 
@@ -45,21 +49,31 @@ trait SocketCommunicatorTrait
      */
     public function update(): static
     {
-        foreach ($this->socket->receiveMessages() as $message) {
-            if ($message instanceof RequestInterface) {
-                $response = $this->handleRequest($message);
-                if ($response) {
-                    $this->socket->sendMessage($response);
+        try {
+            foreach ($this->socket->receiveMessages() as $message) {
+                if ($message instanceof RequestInterface) {
+                    $response = $this->handleRequest($message);
+                    if ($response) {
+                        $this->socket->sendMessage($response);
+                    }
+                    continue;
                 }
-                continue;
+                if ($message instanceof ResponseInterface) {
+                    $this->promises[$message->getRequestId()]->resolve($message);
+                }
             }
-            if ($message instanceof ResponseInterface) {
-                $this->promises[$message->getRequestId()]->resolve($message);
-            }
+            usleep(500);
+        } catch (SocketReadException $e) {
+            $this->handleFail($e->getMessage());
         }
-        usleep(500);
         return $this;
     }
+
+    /**
+     * @param string|null $reason
+     * @return $this
+     */
+    abstract protected function handleFail(?string $reason = null): static;
 
     /**
      * @param RequestInterface $request

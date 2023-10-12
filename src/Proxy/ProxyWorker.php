@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
+use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
