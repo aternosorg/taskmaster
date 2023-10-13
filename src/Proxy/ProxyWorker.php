@@ -55,8 +55,7 @@ class ProxyWorker extends WorkerInstance
         $this->proxy->startWorker($this->worker)->then(function () use ($promise) {
             $this->worker->setSocket($this->socket);
             $this->worker->init();
-            $this->status = WorkerStatus::IDLE;
-            $this->worker->setStatus(WorkerStatus::IDLE);
+            $this->worker->setStatus(WorkerStatus::STARTING);
             $promise->resolve();
         });
         return $promise;
@@ -67,7 +66,7 @@ class ProxyWorker extends WorkerInstance
      */
     public function update(): static
     {
-        if ($this->getStatus() !== WorkerStatus::STARTING) {
+        if ($this->getStatus() !== WorkerStatus::CREATED && $this->getStatus() !== WorkerStatus::FAILED) {
             $this->worker->update();
         }
         return $this;

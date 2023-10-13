@@ -4,10 +4,11 @@ namespace Aternos\Taskmaster\Worker;
 
 use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
+use Aternos\Taskmaster\Communication\Socket\SocketException;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
 
-abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableWorkerInstanceInterface
+abstract class SocketWorkerInstance extends WorkerInstance
 {
     use SocketCommunicatorTrait {
         update as socketUpdate;
@@ -19,21 +20,6 @@ abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableW
     {
         parent::__construct($options);
         $this->id = uniqid();
-    }
-
-    public function init(): static
-    {
-        $this->registerRequestHandler(WorkerDiedRequest::class, $this->handleWorkerDiedRequest(...));
-        return parent::init();
-    }
-
-    /**
-     * @param WorkerDiedRequest $request
-     * @return void
-     */
-    protected function handleWorkerDiedRequest(WorkerDiedRequest $request): void
-    {
-        $this->handleFail($request->getReason());
     }
 
     /**
@@ -78,4 +64,23 @@ abstract class SocketWorkerInstance extends WorkerInstance implements ProxyableW
         }
         return $this;
     }
+
+    protected function handleFail(?string $reason = null): static
+    {
+        if ($this->status === WorkerStatus::FAILED) {
+            return $this;
+        }
+        $this->status = WorkerStatus::FAILED;
+        try {
+            // try to read any last messages
+            $this->update();
+        } catch (SocketException $e) {
+        }
+        return parent::handleFail($reason);
+    }
+
+    /**
+     * @return bool
+     */
+    abstract public function hasDied(): bool;
 }

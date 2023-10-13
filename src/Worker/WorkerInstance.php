@@ -5,6 +5,7 @@ namespace Aternos\Taskmaster\Worker;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
+use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Response\ErrorResponse;
 use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
@@ -18,7 +19,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
 {
     use RequestHandlingTrait;
 
-    protected WorkerStatus $status = WorkerStatus::STARTING;
+    protected WorkerStatus $status = WorkerStatus::CREATED;
     protected ?TaskInterface $currentTask = null;
     protected ?ResponsePromise $currentResponsePromise = null;
 
@@ -29,7 +30,17 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     public function init(): static
     {
         $this->registerRequestHandler(ExecuteFunctionRequest::class, $this->handleExecuteFunctionRequest(...));
+        $this->registerRequestHandler(RuntimeReadyRequest::class, $this->handleRuntimeReadyRequest(...));
         return $this;
+    }
+
+    /**
+     * @param RuntimeReadyRequest $request
+     * @return void
+     */
+    protected function handleRuntimeReadyRequest(RuntimeReadyRequest $request): void
+    {
+        $this->status = WorkerStatus::IDLE;
     }
 
     /**
@@ -67,17 +78,17 @@ abstract class WorkerInstance implements WorkerInstanceInterface
         $promise = $this->sendRequest($request);
         $this->currentResponsePromise = $promise;
         $promise->then(function (ResponseInterface $response) {
-            $this->status = WorkerStatus::IDLE;
             if ($response instanceof ErrorResponse) {
                 $this->currentTask->handleError($response);
             } else {
                 $this->currentTask->handleResult($response->getData());
             }
             $this->currentTask = null;
+            $this->currentResponsePromise = null;
         })->catch(function (\Exception $exception) {
-            $this->status = WorkerStatus::IDLE;
             $this->currentTask->handleError(new ExceptionResponse(0, $exception));
             $this->currentTask = null;
+            $this->currentResponsePromise = null;
         });
         return $promise;
     }

@@ -4,6 +4,8 @@ namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\MessageInterface;
 use Aternos\Taskmaster\Communication\Socket\Socket;
+use Aternos\Taskmaster\Communication\Socket\SocketReadException;
+use Aternos\Taskmaster\Communication\Socket\SocketWriteException;
 use Generator;
 
 class ProxySocket extends Socket implements ProxySocketInterface
@@ -17,6 +19,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
      * @param string|null $id
      * @param MessageInterface|string $message
      * @return bool
+     * @throws SocketWriteException
      */
     public function sendProxyMessage(?string $id, MessageInterface|string $message): bool
     {
@@ -42,6 +45,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
 
     /**
      * @return void
+     * @throws SocketReadException
      */
     protected function readMessages(): void
     {
@@ -53,6 +57,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     /**
      * @param string|null $id
      * @return Generator<MessageInterface>
+     * @throws SocketReadException
      */
     public function receiveProxyMessages(?string $id): Generator
     {
@@ -64,6 +69,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     /**
      * @param string|null $id
      * @return Generator<string>
+     * @throws SocketReadException
      */
     public function receiveRawProxyMessages(?string $id): Generator
     {
@@ -75,6 +81,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     /**
      * @param string|null $id
      * @return Generator<ProxyMessage>
+     * @throws SocketReadException
      */
     protected function readProxyMessages(?string $id): Generator
     {

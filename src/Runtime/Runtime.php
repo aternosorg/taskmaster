@@ -3,6 +3,7 @@
 namespace Aternos\Taskmaster\Runtime;
 
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
+use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\Response\PhpErrorResponse;
@@ -24,6 +25,14 @@ abstract class Runtime implements RuntimeInterface
     abstract protected function update(): static;
 
     /**
+     * @return void
+     */
+    protected function setReady(): void
+    {
+        $this->sendRequest(new RuntimeReadyRequest());
+    }
+
+    /**
      * @throws Throwable
      */
     protected function runTask(RunTaskRequest $request): mixed
@@ -36,9 +45,11 @@ abstract class Runtime implements RuntimeInterface
             while (!$fiber->isTerminated()) {
                 $this->update();
             }
-            return $fiber->getReturn();
+            $result = $fiber->getReturn();
         } catch (Exception $exception) {
-            return new ExceptionResponse($request->getRequestId(), $exception);
+            $result = new ExceptionResponse($request->getRequestId(), $exception);
         }
+        $this->setReady();
+        return $result;
     }
 }

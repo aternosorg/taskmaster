@@ -24,6 +24,7 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
             $this->socket = $socket;
         }
         set_error_handler($this->handleError(...), E_ERROR | E_USER_ERROR);
+        $this->setReady();
     }
 
     /**

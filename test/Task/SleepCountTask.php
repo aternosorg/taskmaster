@@ -31,6 +31,7 @@ class SleepCountTask extends Task
             $current = $this->call($this->getCurrent(...));
             echo $current . " | " . $this->name . ": " . $i . PHP_EOL;
         }
+        //trigger_error("Test error", E_USER_ERROR);
         return $current;
     }
 

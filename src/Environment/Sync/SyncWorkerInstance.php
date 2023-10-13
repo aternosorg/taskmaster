@@ -41,8 +41,8 @@ class SyncWorkerInstance extends WorkerInstance
      */
     public function start(): Promise
     {
+        $this->status = WorkerStatus::STARTING;
         $this->runtime = new SyncRuntime($this);
-        $this->status = WorkerStatus::IDLE;
         return (new Promise())->resolve();
     }
 }

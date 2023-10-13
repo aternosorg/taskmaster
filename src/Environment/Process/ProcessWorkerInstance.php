@@ -4,12 +4,13 @@ namespace Aternos\Taskmaster\Environment\Process;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
+use Aternos\Taskmaster\Worker\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\SocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
-class ProcessWorkerInstance extends SocketWorkerInstance
+class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
 {
-    protected RuntimeProcess $process;
+    protected ?RuntimeProcess $process = null;
 
     public function stop(): static
     {
@@ -21,7 +22,18 @@ class ProcessWorkerInstance extends SocketWorkerInstance
     {
         $this->process = new RuntimeProcess($this->options, ProcessRuntime::class);
         $this->socket = $this->process->getSocket();
-        $this->status = WorkerStatus::IDLE;
+        $this->status = WorkerStatus::STARTING;
         return (new Promise())->resolve();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasDied(): bool
+    {
+        if ($this->process === null) {
+            return false;
+        }
+        return !$this->process->isRunning();
     }
 }

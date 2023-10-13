@@ -12,6 +12,7 @@ class SyncRuntime extends Runtime
 
     public function __construct(protected SyncWorkerInstance $worker)
     {
+        $this->setReady();
         parent::__construct();
     }
 
@@ -26,7 +27,8 @@ class SyncRuntime extends Runtime
         return (new ResponsePromise())->resolve($response);
     }
 
-    protected function update(): void
+    protected function update(): static
     {
+        return $this;
     }
 }

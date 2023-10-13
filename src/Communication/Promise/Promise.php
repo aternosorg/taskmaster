@@ -65,7 +65,7 @@ class Promise
      */
     public function resolve(mixed $value = null): static
     {
-        if ($this->resolved) {
+        if ($this->resolved || $this->failed) {
             return $this;
         }
         $this->resolved = true;
@@ -86,7 +86,7 @@ class Promise
      */
     public function reject(Exception $exception): static
     {
-        if ($this->failed) {
+        if ($this->failed || $this->resolved) {
             return $this;
         }
         $this->failed = true;

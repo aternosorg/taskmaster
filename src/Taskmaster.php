@@ -5,8 +5,6 @@ namespace Aternos\Taskmaster;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
-use Aternos\Taskmaster\Worker\WorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 

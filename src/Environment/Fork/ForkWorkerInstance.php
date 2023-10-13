@@ -4,11 +4,10 @@ namespace Aternos\Taskmaster\Environment\Fork;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
-use Aternos\Taskmaster\Worker\SocketWorkerInstance;
+use Aternos\Taskmaster\Worker\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
-use Throwable;
 
-class ForkWorkerInstance extends SocketWorkerInstance
+class ForkWorkerInstance extends ProxyableSocketWorkerInstance
 {
     protected ?int $pid = null;
 
@@ -35,7 +34,7 @@ class ForkWorkerInstance extends SocketWorkerInstance
         $socketPair->closeChildSocket();
         $this->socket = $socketPair->getParentSocket();
         $this->pid = $pid;
-        $this->status = WorkerStatus::IDLE;
+        $this->status = WorkerStatus::STARTING;
         return (new Promise())->resolve();
     }
 

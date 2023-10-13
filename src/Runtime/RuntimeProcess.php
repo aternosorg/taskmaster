@@ -55,4 +55,12 @@ class RuntimeProcess
     {
         return $this->socket;
     }
+
+    /**
+     * @return bool
+     */
+    public function isRunning(): bool
+    {
+        return proc_get_status($this->process)["running"];
+    }
 }
