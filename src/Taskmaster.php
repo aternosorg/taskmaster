@@ -2,14 +2,18 @@
 
 namespace Aternos\Taskmaster;
 
+use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
+use Aternos\Taskmaster\Worker\SocketWorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class Taskmaster
 {
+    public const SOCKET_WAIT_TIME = 500;
+
     /**
      * @var TaskInterface[]
      */
@@ -118,7 +122,48 @@ class Taskmaster
             $worker->update();
         }
         $this->proxy?->update();
-        usleep(500);
+        $this->waitForNewUpdate();
+    }
+
+    /**
+     * @return void
+     */
+    protected function waitForNewUpdate(): void
+    {
+        $time = Taskmaster::SOCKET_WAIT_TIME;
+        $streams = $this->getSelectableStreams();
+        if (count($streams) === 0) {
+            usleep($time);
+            return;
+        }
+        stream_select($streams, $write, $except, 0, $time);
+    }
+
+    /**
+     * @return resource[]
+     */
+    protected function getSelectableStreams(): array
+    {
+        $streams = [];
+        foreach ($this->workers as $worker) {
+            if (!$worker instanceof SocketWorkerInterface) {
+                continue;
+            }
+            $socket = $worker->getSocket();
+            if (!$socket) {
+                continue;
+            }
+            if (!$socket instanceof SelectableSocketInterface) {
+                continue;
+            }
+            $streams[] = $socket->getSelectableReadStream();
+        }
+        if ($this->proxy && $socket = $this->proxy->getSocket()) {
+            if ($socket instanceof SelectableSocketInterface) {
+                $streams[] = $socket->getSelectableReadStream();
+            }
+        }
+        return $streams;
     }
 
     /**
@@ -127,10 +172,12 @@ class Taskmaster
     protected function waitForAvailableWorker(): WorkerInterface
     {
         do {
-            $this->update();
             $worker = $this->getAvailableWorker();
-        } while ($worker === null);
-        return $worker;
+            if ($worker) {
+                return $worker;
+            }
+            $this->update();
+        } while (true);
     }
 
     /**

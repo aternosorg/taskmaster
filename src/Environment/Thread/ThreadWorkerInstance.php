@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Environment\Thread;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
-use Aternos\Taskmaster\Worker\ProxyableSocketWorkerInstance;
+use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 use parallel\Channel;
 use parallel\Future;

@@ -5,7 +5,7 @@ namespace Aternos\Taskmaster\Communication\Socket;
 use Aternos\Taskmaster\Communication\MessageInterface;
 use Generator;
 
-class Socket implements SocketInterface
+class Socket implements SocketInterface, SelectableSocketInterface
 {
     /**
      * @param resource $socket
@@ -102,5 +102,23 @@ class Socket implements SocketInterface
             $total += $result;
         } while ($total < $expected);
         return true;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSelectableReadStream(): mixed
+    {
+        return $this->socket;
+    }
+
+    /**
+     * @param int $microseconds
+     * @return void
+     */
+    public function waitForNewData(int $microseconds): void
+    {
+        $read = [$this->socket];
+        stream_select($read, $write, $except, 0, $microseconds);
     }
 }

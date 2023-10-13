@@ -6,7 +6,7 @@ use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\RequestInterface;
 use Aternos\Taskmaster\Communication\ResponseInterface;
-use Aternos\Taskmaster\Worker\WorkerInstance;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 use Throwable;
 

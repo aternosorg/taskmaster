@@ -4,12 +4,11 @@ namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
-use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
-use Aternos\Taskmaster\Worker\WorkerInstance;
+use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class ProxyWorker extends WorkerInstance

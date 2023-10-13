@@ -2,9 +2,9 @@
 
 namespace Aternos\Taskmaster\Environment\Process;
 
-use Aternos\Taskmaster\Worker\Worker;
+use Aternos\Taskmaster\Worker\SocketWorker;
 
-class ProcessWorker extends Worker
+class ProcessWorker extends SocketWorker
 {
     public function createInstance(): ProcessWorkerInstance
     {

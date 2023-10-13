@@ -4,8 +4,7 @@ namespace Aternos\Taskmaster\Environment\Process;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
-use Aternos\Taskmaster\Worker\ProxyableSocketWorkerInstance;
-use Aternos\Taskmaster\Worker\SocketWorkerInstance;
+use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class ProcessWorkerInstance extends ProxyableSocketWorkerInstance

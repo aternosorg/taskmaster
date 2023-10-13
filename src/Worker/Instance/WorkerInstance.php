@@ -1,6 +1,6 @@
 <?php
 
-namespace Aternos\Taskmaster\Worker;
+namespace Aternos\Taskmaster\Worker\Instance;
 
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
@@ -13,6 +13,7 @@ use Aternos\Taskmaster\Communication\Response\WorkerFailedResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
+use Aternos\Taskmaster\Worker\WorkerStatus;
 use Throwable;
 
 abstract class WorkerInstance implements WorkerInstanceInterface

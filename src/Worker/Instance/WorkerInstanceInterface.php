@@ -1,12 +1,13 @@
 <?php
 
-namespace Aternos\Taskmaster\Worker;
+namespace Aternos\Taskmaster\Worker\Instance;
 
 use Aternos\Taskmaster\Communication\CommunicatorInterface;
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
+use Aternos\Taskmaster\Worker\WorkerStatus;
 
 interface WorkerInstanceInterface extends CommunicatorInterface
 {

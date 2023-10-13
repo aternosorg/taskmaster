@@ -3,10 +3,12 @@
 namespace Aternos\Taskmaster\Runtime;
 
 use Aternos\Taskmaster\Communication\Response\PhpErrorResponse;
+use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\Socket;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketWriteException;
+use Aternos\Taskmaster\Taskmaster;
 
 class SocketRuntime extends Runtime implements AsyncRuntimeInterface
 {
@@ -52,6 +54,11 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
     {
         while (true) {
             $this->update();
+            if ($this->socket instanceof SelectableSocketInterface) {
+                $this->socket->waitForNewData(Taskmaster::SOCKET_WAIT_TIME);
+            } else {
+                usleep(Taskmaster::SOCKET_WAIT_TIME);
+            }
         }
     }
 

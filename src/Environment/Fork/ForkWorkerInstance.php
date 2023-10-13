@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Environment\Fork;
 
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
-use Aternos\Taskmaster\Worker\ProxyableSocketWorkerInstance;
+use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class ForkWorkerInstance extends ProxyableSocketWorkerInstance

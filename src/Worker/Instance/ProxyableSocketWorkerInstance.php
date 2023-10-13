@@ -1,6 +1,6 @@
 <?php
 
-namespace Aternos\Taskmaster\Worker;
+namespace Aternos\Taskmaster\Worker\Instance;
 
 use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Throwable;

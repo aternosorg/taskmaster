@@ -2,8 +2,8 @@
 
 namespace Aternos\Taskmaster\Environment\Sync;
 
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Worker;
-use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
 
 class SyncWorker extends Worker
 {

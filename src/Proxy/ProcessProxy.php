@@ -10,7 +10,7 @@ use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 
 class ProcessProxy extends Proxy
 {
@@ -69,7 +69,6 @@ class ProcessProxy extends Proxy
     public function stop(): static
     {
         $this->sendRequest(new TerminateRequest());
-        //$this->process->stop();
         return $this;
     }
 

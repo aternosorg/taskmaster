@@ -1,14 +1,14 @@
 <?php
 
-namespace Aternos\Taskmaster\Worker;
+namespace Aternos\Taskmaster\Worker\Instance;
 
-use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketException;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
+use Aternos\Taskmaster\Worker\WorkerStatus;
 
-abstract class SocketWorkerInstance extends WorkerInstance
+abstract class SocketWorkerInstance extends WorkerInstance implements SocketWorkerInstanceInterface
 {
     use SocketCommunicatorTrait {
         update as socketUpdate;
@@ -31,9 +31,9 @@ abstract class SocketWorkerInstance extends WorkerInstance
     }
 
     /**
-     * @return SocketInterface
+     * @return SocketInterface|null
      */
-    public function getSocket(): SocketInterface
+    public function getSocket(): ?SocketInterface
     {
         return $this->socket;
     }

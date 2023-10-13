@@ -5,6 +5,7 @@ namespace Aternos\Taskmaster\Worker;
 use Aternos\Taskmaster\Proxy\ProxyWorker;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 
 abstract class Worker implements WorkerInterface
 {

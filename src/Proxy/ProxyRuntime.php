@@ -7,12 +7,16 @@ use Aternos\Taskmaster\Communication\Request\StopWorkerRequest;
 use Aternos\Taskmaster\Communication\Request\TerminateRequest;
 use Aternos\Taskmaster\Communication\Request\WorkerDiedRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
+use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketException;
 use Aternos\Taskmaster\Communication\Socket\SocketReadException;
 use Aternos\Taskmaster\Communication\Socket\SocketWriteException;
 use Aternos\Taskmaster\Runtime\AsyncRuntimeInterface;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
+use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\SocketWorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\SocketWorkerInterface;
 
 class ProxyRuntime implements AsyncRuntimeInterface
 {
@@ -71,7 +75,39 @@ class ProxyRuntime implements AsyncRuntimeInterface
         while (true) {
             $this->update();
             $this->pipe();
+            $this->waitForNewData();
         }
+    }
+
+    protected function waitForNewData(): void
+    {
+        $streams = $this->getSelectableStreams();
+        if (count($streams) === 0) {
+            usleep(Taskmaster::SOCKET_WAIT_TIME);
+            return;
+        }
+        stream_select($streams, $write, $except, 0, Taskmaster::SOCKET_WAIT_TIME);
+
+    }
+
+    protected function getSelectableStreams(): array
+    {
+        $streams = [];
+        foreach ($this->workers as $worker) {
+            if (!$worker instanceof SocketWorkerInstanceInterface) {
+                continue;
+            }
+            $socket = $worker->getSocket();
+            if (!$socket) {
+                continue;
+            }
+            if (!$socket instanceof SelectableSocketInterface) {
+                continue;
+            }
+            $streams[] = $socket->getSelectableReadStream();
+        }
+        $streams[] = $this->proxySocket->getSelectableReadStream();
+        return $streams;
     }
 
     /**

@@ -62,7 +62,6 @@ trait SocketCommunicatorTrait
                     $this->promises[$message->getRequestId()]->resolve($message);
                 }
             }
-            usleep(500);
         } catch (SocketReadException $e) {
             $this->handleFail($e->getMessage());
         }

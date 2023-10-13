@@ -2,10 +2,10 @@
 
 namespace Aternos\Taskmaster\Environment\Thread;
 
-use Aternos\Taskmaster\Worker\Worker;
-use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\SocketWorker;
 
-class ThreadWorker extends Worker
+class ThreadWorker extends SocketWorker
 {
     public function createInstance(): WorkerInstanceInterface
     {

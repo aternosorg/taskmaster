@@ -2,10 +2,10 @@
 
 namespace Aternos\Taskmaster\Environment\Fork;
 
-use Aternos\Taskmaster\Worker\Worker;
-use Aternos\Taskmaster\Worker\WorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\SocketWorker;
 
-class ForkWorker extends Worker
+class ForkWorker extends SocketWorker
 {
     public function createInstance(): WorkerInstanceInterface
     {

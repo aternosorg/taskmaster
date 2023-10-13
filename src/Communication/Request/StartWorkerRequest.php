@@ -3,7 +3,7 @@
 namespace Aternos\Taskmaster\Communication\Request;
 
 use Aternos\Taskmaster\Communication\Request;
-use Aternos\Taskmaster\Worker\ProxyableWorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 
 class StartWorkerRequest extends Request
 {
