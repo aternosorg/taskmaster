@@ -41,6 +41,9 @@ abstract class Task implements TaskInterface
             if ($reflectionFunction->getClosureThis() !== $this) {
                 throw new InvalidArgumentException("You can only call closures bound to the current object.");
             }
+            if ($reflectionFunction->getAttributes(RunOnChild::class)) {
+                throw new InvalidArgumentException("You can not call closures with the #[RunOnChild] attribute.");
+            }
             $function = $reflectionFunction->getName();
         }
 
