@@ -15,7 +15,7 @@ interface WorkerInstanceInterface extends CommunicatorInterface
 
     public function init(): static;
 
-    public function start(): Promise;
+    public function start(): static;
 
     public function getStatus(): WorkerStatus;
 

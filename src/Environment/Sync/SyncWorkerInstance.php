@@ -38,13 +38,12 @@ class SyncWorkerInstance extends WorkerInstance
     }
 
     /**
-     * @return Promise
-     * @throws Throwable
+     * @return $this
      */
-    public function start(): Promise
+    public function start(): static
     {
         $this->status = WorkerStatus::STARTING;
         $this->runtime = new SyncRuntime($this);
-        return (new Promise())->resolve();
+        return $this;
     }
 }

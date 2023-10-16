@@ -25,7 +25,7 @@ class ProcessProxy extends Proxy
      * @param ProxyableWorkerInstanceInterface $worker
      * @return ResponsePromise
      */
-    public function startWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise
+    public function startWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
         return $this->sendRequest(new StartWorkerRequest($worker));
     }
@@ -34,7 +34,7 @@ class ProcessProxy extends Proxy
      * @param ProxyableWorkerInstanceInterface $worker
      * @return ResponsePromise
      */
-    public function stopWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise
+    public function stopWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
         return $this->sendRequest(new StopWorkerRequest($worker->getId()));
     }

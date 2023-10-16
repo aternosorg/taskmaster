@@ -19,9 +19,9 @@ interface ProxyInterface
 
     public function update(): static;
 
-    public function startWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
+    public function startWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
 
-    public function stopWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
+    public function stopWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
 
     public function getSocket(): ?SocketInterface;
 

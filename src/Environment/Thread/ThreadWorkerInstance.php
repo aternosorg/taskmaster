@@ -19,7 +19,7 @@ class ThreadWorkerInstance extends ProxyableSocketWorkerInstance
     protected Runtime $runtime;
     protected ?Future $future = null;
 
-    public function start(): Promise
+    public function start(): static
     {
         $this->runtime = new Runtime($this->options->getBootstrap());
         $channelPair = new ChannelPair();
@@ -30,7 +30,7 @@ class ThreadWorkerInstance extends ProxyableSocketWorkerInstance
         }, $channelPair->getChildSocket()->getChannels());
 
         $this->status = WorkerStatus::STARTING;
-        return (new Promise())->resolve();
+        return $this;
     }
 
     public function stop(): static

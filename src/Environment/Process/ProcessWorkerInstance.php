@@ -17,12 +17,12 @@ class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
         return $this;
     }
 
-    public function start(): Promise
+    public function start(): static
     {
         $this->process = new RuntimeProcess($this->options, ProcessRuntime::class);
         $this->socket = $this->process->getSocket();
         $this->status = WorkerStatus::STARTING;
-        return (new Promise())->resolve();
+        return $this;
     }
 
     /**

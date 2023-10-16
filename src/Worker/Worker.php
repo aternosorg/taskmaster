@@ -2,10 +2,11 @@
 
 namespace Aternos\Taskmaster\Worker;
 
+use Aternos\Taskmaster\Proxy\ProxiedSocket;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
-use Aternos\Taskmaster\Proxy\ProxyWorker;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 
 abstract class Worker implements WorkerInterface
@@ -31,13 +32,35 @@ abstract class Worker implements WorkerInterface
     public function getInstance(): WorkerInstanceInterface
     {
         if ($this->instance === null || $this->instance->getStatus() === WorkerStatus::FAILED) {
-            $this->instance = $this->createInstance();
-            if ($proxy = $this->getProxy()) {
-                $this->instance = (new ProxyWorker($this->taskmaster->getOptions()))->setWorker($this->instance)->setProxy($proxy);
-            }
-            $this->instance->init()->start();
+            $this->instance = $this->startNewInstance();
         }
         return $this->instance;
+    }
+
+    /**
+     * @return WorkerInstanceInterface
+     */
+    protected function startNewInstance(): WorkerInstanceInterface
+    {
+        $instance = $this->createInstance();
+        if (!$this->proxy) {
+            return $instance->init()->start();
+        }
+
+        if (!$instance instanceof ProxyableWorkerInstanceInterface) {
+            throw new \RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
+        }
+
+        $socket = new ProxiedSocket($this->proxy->getProxySocket(), $instance->getId());
+
+        $this->proxy->startWorkerInstance($instance)
+            ->then(function () use ($instance, $socket) {
+                $instance->setSocket($socket);
+                $instance->init();
+                $instance->setStatus(WorkerStatus::STARTING);
+            });
+
+        return $instance;
     }
 
     /**
@@ -45,6 +68,9 @@ abstract class Worker implements WorkerInterface
      */
     public function update(): static
     {
+        if ($this->getStatus() === WorkerStatus::CREATED || $this->getStatus() === WorkerStatus::FAILED) {
+            return $this;
+        }
         $this->getInstance()->update();
         return $this;
     }
@@ -54,7 +80,14 @@ abstract class Worker implements WorkerInterface
      */
     public function stop(): static
     {
-        $this->getInstance()->stop();
+        if (!$this->proxy) {
+            $this->getInstance()->stop();
+            return $this;
+        }
+        if (!$this->instance instanceof ProxyableWorkerInstanceInterface) {
+            throw new \RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
+        }
+        $this->proxy->stopWorkerInstance($this->instance);
         return $this;
     }
 

@@ -18,7 +18,7 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
         return $this;
     }
 
-    public function start(): Promise
+    public function start(): static
     {
         $socketPair = new SocketPair();
         $pid = pcntl_fork();
@@ -35,7 +35,7 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
         $this->socket = $socketPair->getParentSocket();
         $this->pid = $pid;
         $this->status = WorkerStatus::STARTING;
-        return (new Promise())->resolve();
+        return $this;
     }
 
     /**
