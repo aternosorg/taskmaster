@@ -65,21 +65,10 @@ class Taskmaster
     /**
      * @return $this
      */
-    public function run(): static
-    {
-        while ($task = $this->getNextTask()) {
-            $worker = $this->waitForAvailableWorker();
-            $worker->assignTask($task);
-        }
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
     public function wait(): static
     {
-        while ($this->hasRunningWorkers()) {
+        $this->update();
+        while ($this->isWorking()) {
             $this->update();
         }
         return $this;
@@ -102,7 +91,7 @@ class Taskmaster
     /**
      * @return bool
      */
-    protected function hasRunningWorkers(): bool
+    public function isWorking(): bool
     {
         return count($this->getRunningWorkers()) > 0;
     }
@@ -124,15 +113,33 @@ class Taskmaster
     /**
      * @return void
      */
-    protected function update(): void
+    public function update(): void
     {
         foreach ($this->workers as $worker) {
+            $this->assignNextTaskToWorkerIfPossible($worker);
             $worker->update();
+            $this->assignNextTaskToWorkerIfPossible($worker);
         }
         foreach ($this->proxies as $proxy) {
             $proxy->update();
         }
         $this->waitForNewUpdate();
+    }
+
+    /**
+     * @param WorkerInterface $worker
+     * @return void
+     */
+    protected function assignNextTaskToWorkerIfPossible(WorkerInterface $worker): void
+    {
+        if ($worker->getStatus() !== WorkerStatus::AVAILABLE) {
+            return;
+        }
+        $task = $this->getNextTask();
+        if (!$task) {
+            return;
+        }
+        $worker->assignTask($task);
     }
 
     /**
@@ -179,33 +186,6 @@ class Taskmaster
             $streams[] = $socket->getSelectableReadStream();
         }
         return $streams;
-    }
-
-    /**
-     * @return WorkerInterface
-     */
-    protected function waitForAvailableWorker(): WorkerInterface
-    {
-        do {
-            $worker = $this->getAvailableWorker();
-            if ($worker) {
-                return $worker;
-            }
-            $this->update();
-        } while (true);
-    }
-
-    /**
-     * @return WorkerInterface|null
-     */
-    protected function getAvailableWorker(): ?WorkerInterface
-    {
-        foreach ($this->workers as $worker) {
-            if ($worker->getStatus() === WorkerStatus::AVAILABLE) {
-                return $worker;
-            }
-        }
-        return null;
     }
 
     /**
@@ -307,5 +287,13 @@ class Taskmaster
     public function getOptions(): TaskmasterOptions
     {
         return $this->options;
+    }
+
+    /**
+     * @return TaskInterface[]
+     */
+    public function getTasks(): array
+    {
+        return $this->tasks;
     }
 }
