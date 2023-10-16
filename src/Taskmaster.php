@@ -5,6 +5,7 @@ namespace Aternos\Taskmaster;
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Environment\Fork\ForkWorker;
 use Aternos\Taskmaster\Environment\Process\ProcessWorker;
+use Aternos\Taskmaster\Environment\Sync\SyncWorker;
 use Aternos\Taskmaster\Proxy\ProcessProxy;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
@@ -15,7 +16,7 @@ use Aternos\Taskmaster\Worker\WorkerStatus;
 
 class Taskmaster
 {
-    public const SOCKET_WAIT_TIME = 500;
+    public const SOCKET_WAIT_TIME = 1000;
 
     /**
      * @var TaskInterface[]
@@ -158,6 +159,9 @@ class Taskmaster
      */
     protected function waitForNewUpdate(): void
     {
+        if ($this->hasOnlySyncWorkers()) {
+            return;
+        }
         $time = Taskmaster::SOCKET_WAIT_TIME;
         $streams = $this->getSelectableStreams();
         if (count($streams) === 0) {
@@ -165,6 +169,19 @@ class Taskmaster
             return;
         }
         stream_select($streams, $write, $except, 0, $time);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function hasOnlySyncWorkers(): bool
+    {
+        foreach ($this->workers as $worker) {
+            if (!$worker instanceof SyncWorker) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
