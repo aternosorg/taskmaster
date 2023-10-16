@@ -7,7 +7,7 @@ use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\RequestInterface;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 use Throwable;
 
 class SyncWorkerInstance extends WorkerInstance
@@ -42,7 +42,7 @@ class SyncWorkerInstance extends WorkerInstance
      */
     public function start(): static
     {
-        $this->status = WorkerStatus::STARTING;
+        $this->status = WorkerInstanceStatus::STARTING;
         $this->runtime = new SyncRuntime($this);
         return $this;
     }

@@ -6,7 +6,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketException;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 
 abstract class SocketWorkerInstance extends WorkerInstance implements SocketWorkerInstanceInterface
 {
@@ -48,7 +48,7 @@ abstract class SocketWorkerInstance extends WorkerInstance implements SocketWork
         return $this;
     }
 
-    public function setStatus(WorkerStatus $status): static
+    public function setStatus(WorkerInstanceStatus $status): static
     {
         $this->status = $status;
         return $this;
@@ -57,7 +57,7 @@ abstract class SocketWorkerInstance extends WorkerInstance implements SocketWork
     public function update(): static
     {
         $this->socketUpdate();
-        if ($this->status === WorkerStatus::IDLE || $this->status === WorkerStatus::WORKING) {
+        if ($this->status === WorkerInstanceStatus::IDLE || $this->status === WorkerInstanceStatus::WORKING) {
             if ($this->hasDied()) {
                 $this->handleFail("Worker exited unexpectedly.");
             }
@@ -67,10 +67,10 @@ abstract class SocketWorkerInstance extends WorkerInstance implements SocketWork
 
     protected function handleFail(?string $reason = null): static
     {
-        if ($this->status === WorkerStatus::FAILED) {
+        if ($this->status === WorkerInstanceStatus::FAILED) {
             return $this;
         }
-        $this->status = WorkerStatus::FAILED;
+        $this->status = WorkerInstanceStatus::FAILED;
         try {
             // try to read any last messages
             $this->update();

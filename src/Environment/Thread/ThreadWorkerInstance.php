@@ -5,7 +5,7 @@ namespace Aternos\Taskmaster\Environment\Thread;
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 use parallel\Channel;
 use parallel\Future;
 use parallel\Runtime;
@@ -29,7 +29,7 @@ class ThreadWorkerInstance extends ProxyableSocketWorkerInstance
             (new ThreadRuntime(new ChannelSocket($sender, $receiver)))->start();
         }, $channelPair->getChildSocket()->getChannels());
 
-        $this->status = WorkerStatus::STARTING;
+        $this->status = WorkerInstanceStatus::STARTING;
         return $this;
     }
 
@@ -38,7 +38,7 @@ class ThreadWorkerInstance extends ProxyableSocketWorkerInstance
         if ($this->hasDied()) {
             return $this;
         }
-        $this->runtime->kill();
+        $this->runtime?->kill();
         return $this;
     }
 

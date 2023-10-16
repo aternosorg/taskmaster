@@ -15,14 +15,14 @@ use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Task\TaskMessageInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 use Throwable;
 
 abstract class WorkerInstance implements WorkerInstanceInterface
 {
     use RequestHandlingTrait;
 
-    protected WorkerStatus $status = WorkerStatus::CREATED;
+    protected WorkerInstanceStatus $status = WorkerInstanceStatus::CREATED;
     protected ?TaskInterface $currentTask = null;
     protected ?ResponsePromise $currentResponsePromise = null;
 
@@ -43,7 +43,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      */
     protected function handleRuntimeReadyRequest(RuntimeReadyRequest $request): void
     {
-        $this->status = WorkerStatus::IDLE;
+        $this->status = WorkerInstanceStatus::IDLE;
     }
 
     /**
@@ -69,7 +69,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      */
     public function runTask(TaskInterface $task): ResponsePromise
     {
-        $this->status = WorkerStatus::WORKING;
+        $this->status = WorkerInstanceStatus::WORKING;
         $this->currentTask = $task;
         return $this->sendRunTaskRequest(new RunTaskRequest($task));
     }
@@ -105,9 +105,9 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     }
 
     /**
-     * @return WorkerStatus
+     * @return WorkerInstanceStatus
      */
-    public function getStatus(): WorkerStatus
+    public function getStatus(): WorkerInstanceStatus
     {
         return $this->status;
     }
@@ -119,9 +119,8 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      */
     protected function handleFail(?string $reason = null): static
     {
-        $this->status = WorkerStatus::FAILED;
+        $this->status = WorkerInstanceStatus::FAILED;
         $this->currentResponsePromise?->resolve(new WorkerFailedResponse($reason));
-        //$this->stop();
         return $this;
     }
 }

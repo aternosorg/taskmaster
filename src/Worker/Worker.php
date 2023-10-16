@@ -11,10 +11,13 @@ use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 
 abstract class Worker implements WorkerInterface
 {
+    protected WorkerStatus $status = WorkerStatus::AVAILABLE;
     protected Taskmaster $taskmaster;
     protected ?WorkerInstanceInterface $instance = null;
     protected ?string $group = null;
     protected ?ProxyInterface $proxy = null;
+    protected bool $instanceStarted = false;
+    protected ?TaskInterface $queuedTask = null;
 
     /**
      * @param Taskmaster $taskmaster
@@ -31,20 +34,23 @@ abstract class Worker implements WorkerInterface
      */
     public function getInstance(): WorkerInstanceInterface
     {
-        if ($this->instance === null || $this->instance->getStatus() === WorkerStatus::FAILED) {
-            $this->instance = $this->startNewInstance();
+        if ($this->instance === null || $this->instance->getStatus() === WorkerInstanceStatus::FAILED) {
+            $this->instanceStarted = false;
+            $this->instance = $this->createInstance();
         }
         return $this->instance;
     }
 
     /**
-     * @return WorkerInstanceInterface
+     * @return void
      */
-    protected function startNewInstance(): WorkerInstanceInterface
+    protected function startInstance(): void
     {
-        $instance = $this->createInstance();
+        $this->instanceStarted = true;
+        $instance = $this->getInstance();
         if (!$this->proxy) {
-            return $instance->init()->start();
+            $instance->init()->start();
+            return;
         }
 
         if (!$instance instanceof ProxyableWorkerInstanceInterface) {
@@ -57,10 +63,8 @@ abstract class Worker implements WorkerInterface
             ->then(function () use ($instance, $socket) {
                 $instance->setSocket($socket);
                 $instance->init();
-                $instance->setStatus(WorkerStatus::STARTING);
+                $instance->setStatus(WorkerInstanceStatus::STARTING);
             });
-
-        return $instance;
     }
 
     /**
@@ -68,10 +72,19 @@ abstract class Worker implements WorkerInterface
      */
     public function update(): static
     {
-        if ($this->getStatus() === WorkerStatus::CREATED || $this->getStatus() === WorkerStatus::FAILED) {
+        $instance = $this->getInstance();
+        if (!in_array($instance->getStatus(), WorkerInstanceStatus::GROUP_UPDATE)) {
             return $this;
         }
-        $this->getInstance()->update();
+        $instance->update();
+        if ($instance->getStatus() === WorkerInstanceStatus::IDLE) {
+            if ($this->queuedTask) {
+                $instance->runTask($this->queuedTask);
+                $this->queuedTask = null;
+            } else {
+                $this->status = WorkerStatus::AVAILABLE;
+            }
+        }
         return $this;
     }
 
@@ -80,14 +93,17 @@ abstract class Worker implements WorkerInterface
      */
     public function stop(): static
     {
+        $this->status = WorkerStatus::AVAILABLE;
+        $instance = $this->getInstance();
+        $this->instance = null;
         if (!$this->proxy) {
-            $this->getInstance()->stop();
+            $instance->stop();
             return $this;
         }
-        if (!$this->instance instanceof ProxyableWorkerInstanceInterface) {
+        if (!$instance instanceof ProxyableWorkerInstanceInterface) {
             throw new \RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
         }
-        $this->proxy->stopWorkerInstance($this->instance);
+        $this->proxy->stopWorkerInstance($instance);
         return $this;
     }
 
@@ -96,7 +112,7 @@ abstract class Worker implements WorkerInterface
      */
     public function getStatus(): WorkerStatus
     {
-        return $this->getInstance()->getStatus();
+        return $this->status;
     }
 
     /**
@@ -105,7 +121,16 @@ abstract class Worker implements WorkerInterface
      */
     public function assignTask(TaskInterface $task): static
     {
-        $this->getInstance()->runTask($task);
+        $this->status = WorkerStatus::WORKING;
+        $instance = $this->getInstance();
+        if (!$this->instanceStarted) {
+            $this->startInstance();
+        }
+        if ($instance->getStatus() === WorkerInstanceStatus::IDLE) {
+            $this->getInstance()->runTask($task);
+        } else {
+            $this->queuedTask = $task;
+        }
         return $this;
     }
 

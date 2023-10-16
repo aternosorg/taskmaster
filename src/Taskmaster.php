@@ -201,7 +201,7 @@ class Taskmaster
     protected function getAvailableWorker(): ?WorkerInterface
     {
         foreach ($this->workers as $worker) {
-            if ($worker->getStatus() === WorkerStatus::IDLE) {
+            if ($worker->getStatus() === WorkerStatus::AVAILABLE) {
                 return $worker;
             }
         }

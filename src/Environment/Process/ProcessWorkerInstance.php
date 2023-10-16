@@ -5,7 +5,7 @@ namespace Aternos\Taskmaster\Environment\Process;
 use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 
 class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
 {
@@ -13,7 +13,7 @@ class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
 
     public function stop(): static
     {
-        $this->process->stop();
+        $this->process?->stop();
         return $this;
     }
 
@@ -21,7 +21,7 @@ class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
     {
         $this->process = new RuntimeProcess($this->options, ProcessRuntime::class);
         $this->socket = $this->process->getSocket();
-        $this->status = WorkerStatus::STARTING;
+        $this->status = WorkerInstanceStatus::STARTING;
         return $this;
     }
 

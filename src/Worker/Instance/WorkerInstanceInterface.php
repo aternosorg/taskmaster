@@ -7,7 +7,7 @@ use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\WorkerStatus;
+use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 
 interface WorkerInstanceInterface extends CommunicatorInterface
 {
@@ -17,7 +17,7 @@ interface WorkerInstanceInterface extends CommunicatorInterface
 
     public function start(): static;
 
-    public function getStatus(): WorkerStatus;
+    public function getStatus(): WorkerInstanceStatus;
 
     public function runTask(TaskInterface $task): ResponsePromise;
 
