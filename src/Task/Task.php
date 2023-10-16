@@ -17,6 +17,7 @@ use Throwable;
 abstract class Task implements TaskInterface
 {
     protected ?RuntimeInterface $runtime = null;
+    protected ?string $group = null;
 
     /**
      * @param RuntimeInterface $runtime
@@ -85,5 +86,23 @@ abstract class Task implements TaskInterface
     public function handleError(ErrorResponse $error): void
     {
         fwrite(STDERR, $error->getError() . PHP_EOL);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getGroup(): ?string
+    {
+        return $this->group;
+    }
+
+    /**
+     * @param string|null $group
+     * @return $this
+     */
+    public function setGroup(?string $group): static
+    {
+        $this->group = $group;
+        return $this;
     }
 }

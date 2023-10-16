@@ -32,7 +32,11 @@ class Taskmaster
      */
     protected array $proxies = [];
 
-    protected ?TaskFactoryInterface $taskFactory = null;
+    /**
+     * @var TaskFactoryInterface[]
+     */
+    protected array $taskFactories = [];
+
     protected TaskmasterOptions $options;
 
     public function __construct()
@@ -56,9 +60,9 @@ class Taskmaster
      * @param TaskFactoryInterface $taskFactory
      * @return $this
      */
-    public function setTaskFactory(TaskFactoryInterface $taskFactory): static
+    public function addTaskFactory(TaskFactoryInterface $taskFactory): static
     {
-        $this->taskFactory = $taskFactory;
+        $this->taskFactories[] = $taskFactory;
         return $this;
     }
 
@@ -67,10 +71,17 @@ class Taskmaster
      */
     public function wait(): static
     {
-        $this->update();
-        while ($this->isWorking()) {
+        do {
             $this->update();
-        }
+        } while ($this->isWorking());
+        return $this;
+    }
+
+    public function waitUntilAllTasksAreAssigned(): static
+    {
+        do {
+            $this->update();
+        } while (count($this->getTasks()) > 0);
         return $this;
     }
 
@@ -135,7 +146,7 @@ class Taskmaster
         if ($worker->getStatus() !== WorkerStatus::AVAILABLE) {
             return;
         }
-        $task = $this->getNextTask();
+        $task = $this->getNextTask($worker->getGroup());
         if (!$task) {
             return;
         }
@@ -251,15 +262,27 @@ class Taskmaster
     }
 
     /**
+     * @param string|null $group
      * @return TaskInterface|null
      */
-    public function getNextTask(): ?TaskInterface
+    public function getNextTask(?string $group = null): ?TaskInterface
     {
-        if ($this->taskFactory !== null) {
-            return $this->taskFactory->createNextTask();
+        foreach ($this->taskFactories as $taskFactory) {
+            $groups = $taskFactory->getGroups();
+            if (is_array($groups) && !in_array($group, $groups)) {
+                continue;
+            }
+            $task = $taskFactory->createNextTask($group);
+            if ($task) {
+                return $task;
+            }
         }
-        if (count($this->tasks) > 0) {
-            return array_shift($this->tasks);
+        foreach ($this->tasks as $i => $task) {
+            if ($task->getGroup() !== $group) {
+                continue;
+            }
+            unset($this->tasks[$i]);
+            return $task;
         }
         return null;
     }

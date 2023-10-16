@@ -14,4 +14,6 @@ interface TaskInterface
     public function handleError(ErrorResponse $error): void;
 
     public function setRuntime(RuntimeInterface $runtime): static;
+
+    public function getGroup(): ?string;
 }

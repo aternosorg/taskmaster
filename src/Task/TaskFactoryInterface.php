@@ -4,5 +4,10 @@ namespace Aternos\Taskmaster\Task;
 
 interface TaskFactoryInterface
 {
-    public function createNextTask(): TaskInterface;
+    /**
+     * @return string[]|null[]|null
+     */
+    public function getGroups(): ?array;
+
+    public function createNextTask(?string $group): ?TaskInterface;
 }
