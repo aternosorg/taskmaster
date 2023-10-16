@@ -68,7 +68,6 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
      */
     protected function handleFail(?string $reason = null): static
     {
-        var_dump(getmypid());
         fwrite(STDERR, "Runtime failed: " . $reason . PHP_EOL);
         exit(1);
     }
