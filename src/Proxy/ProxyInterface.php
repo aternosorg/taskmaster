@@ -11,6 +11,8 @@ interface ProxyInterface
 {
     public function setOptions(TaskmasterOptions $options): static;
 
+    public function isRunning(): bool;
+
     public function start(): static;
 
     public function stop(): static;
@@ -21,7 +23,7 @@ interface ProxyInterface
 
     public function stopWorker(ProxyableWorkerInstanceInterface $worker): ResponsePromise;
 
-    public function getSocket(): SocketInterface;
+    public function getSocket(): ?SocketInterface;
 
-    public function getProxySocket(): ProxySocketInterface;
+    public function getProxySocket(): ?ProxySocketInterface;
 }

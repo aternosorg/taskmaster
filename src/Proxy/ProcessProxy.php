@@ -19,7 +19,7 @@ class ProcessProxy extends Proxy
 
     protected ?ProxySocketInterface $proxySocket = null;
 
-    protected RuntimeProcess $process;
+    protected ?RuntimeProcess $process = null;
 
     /**
      * @param ProxyableWorkerInstanceInterface $worker
@@ -75,5 +75,13 @@ class ProcessProxy extends Proxy
     protected function handleFail(?string $reason = null): static
     {
         // TODO: handle proxy fail
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRunning(): bool
+    {
+        return $this->process?->isRunning() === true;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Aternos\Taskmaster\Worker;
 
+use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Proxy\ProxyWorker;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
@@ -11,6 +12,8 @@ abstract class Worker implements WorkerInterface
 {
     protected Taskmaster $taskmaster;
     protected ?WorkerInstanceInterface $instance = null;
+    protected ?string $group = null;
+    protected ?ProxyInterface $proxy = null;
 
     /**
      * @param Taskmaster $taskmaster
@@ -29,7 +32,7 @@ abstract class Worker implements WorkerInterface
     {
         if ($this->instance === null || $this->instance->getStatus() === WorkerStatus::FAILED) {
             $this->instance = $this->createInstance();
-            if ($proxy = $this->taskmaster->getProxy()) {
+            if ($proxy = $this->getProxy()) {
                 $this->instance = (new ProxyWorker($this->taskmaster->getOptions()))->setWorker($this->instance)->setProxy($proxy);
             }
             $this->instance->init()->start();
@@ -71,6 +74,50 @@ abstract class Worker implements WorkerInterface
     {
         $this->getInstance()->runTask($task);
         return $this;
+    }
+
+    /**
+     * @return ProxyInterface|null
+     */
+    public function getProxy(): ?ProxyInterface
+    {
+        return $this->proxy;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getGroup(): ?string
+    {
+        return $this->group;
+    }
+
+    /**
+     * @param string|null $group
+     * @return $this
+     */
+    public function setGroup(?string $group): static
+    {
+        $this->group = $group;
+        return $this;
+    }
+
+    /**
+     * @param ProxyInterface|null $proxy
+     * @return $this
+     */
+    public function setProxy(?ProxyInterface $proxy): static
+    {
+        $this->proxy = $proxy;
+        return $this;
+    }
+
+    /**
+     * @return void
+     */
+    public function __clone(): void
+    {
+        $this->instance = null;
     }
 
     abstract protected function createInstance(): WorkerInstanceInterface;

@@ -3,6 +3,9 @@
 namespace Aternos\Taskmaster;
 
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
+use Aternos\Taskmaster\Environment\Fork\ForkWorker;
+use Aternos\Taskmaster\Environment\Process\ProcessWorker;
+use Aternos\Taskmaster\Proxy\ProcessProxy;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
@@ -24,10 +27,13 @@ class Taskmaster
      */
     protected array $workers = [];
 
+    /**
+     * @var ProxyInterface[]
+     */
+    protected array $proxies = [];
+
     protected ?TaskFactoryInterface $taskFactory = null;
-    protected ?int $parallelLimit = null;
     protected TaskmasterOptions $options;
-    protected ?ProxyInterface $proxy = null;
 
     public function __construct()
     {
@@ -87,7 +93,9 @@ class Taskmaster
         foreach ($this->workers as $worker) {
             $worker->stop();
         }
-        $this->proxy?->stop();
+        foreach ($this->proxies as $proxy) {
+            $proxy->stop();
+        }
         return $this;
     }
 
@@ -121,7 +129,9 @@ class Taskmaster
         foreach ($this->workers as $worker) {
             $worker->update();
         }
-        $this->proxy?->update();
+        foreach ($this->proxies as $proxy) {
+            $proxy->update();
+        }
         $this->waitForNewUpdate();
     }
 
@@ -158,10 +168,15 @@ class Taskmaster
             }
             $streams[] = $socket->getSelectableReadStream();
         }
-        if ($this->proxy && $socket = $this->proxy->getSocket()) {
-            if ($socket instanceof SelectableSocketInterface) {
-                $streams[] = $socket->getSelectableReadStream();
+        foreach ($this->proxies as $proxy) {
+            $socket = $proxy->getSocket();
+            if (!$socket) {
+                continue;
             }
+            if (!$socket instanceof SelectableSocketInterface) {
+                continue;
+            }
+            $streams[] = $socket->getSelectableReadStream();
         }
         return $streams;
     }
@@ -199,11 +214,60 @@ class Taskmaster
      */
     public function setWorkers(array $workers): static
     {
+        $this->workers = [];
         foreach ($workers as $worker) {
-            $worker->setTaskmaster($this);
+            $this->addWorker($worker);
         }
-        $this->workers = $workers;
         return $this;
+    }
+
+    /**
+     * @param WorkerInterface $worker
+     * @return $this
+     */
+    public function addWorker(WorkerInterface $worker): static
+    {
+        $proxy = $worker->getProxy();
+        if ($proxy && !in_array($proxy, $this->proxies, true)) {
+            if (!$proxy->isRunning()) {
+                $proxy->setOptions($this->options);
+                $proxy->start();
+            }
+            $this->proxies[] = $proxy;
+        }
+
+        $worker->setTaskmaster($this);
+        $this->workers[] = $worker;
+        return $this;
+    }
+
+    /**
+     * @param WorkerInterface $worker
+     * @param int $count
+     * @return $this
+     */
+    public function addWorkers(WorkerInterface $worker, int $count): static
+    {
+        for ($i = 0; $i < $count; $i++) {
+            $this->addWorker(clone $worker);
+        }
+        return $this;
+    }
+
+    /**
+     * @param int $count
+     * @return $this
+     */
+    public function autoDetectWorkers(int $count): static
+    {
+        if (extension_loaded("pcntl")) {
+            return $this->addWorkers(new ForkWorker(), $count);
+        }
+        if (getenv("TASKMASTER_PROXY_FORK")) {
+            $proxy = new ProcessProxy();
+            return $this->addWorkers((new ForkWorker())->setProxy($proxy), $count);
+        }
+        return $this->addWorkers(new ProcessWorker(), $count);
     }
 
     /**
@@ -218,24 +282,6 @@ class Taskmaster
             return array_shift($this->tasks);
         }
         return null;
-    }
-
-    /**
-     * @return int
-     */
-    public function getParallelLimit(): int
-    {
-        return $this->parallelLimit ?? 8;
-    }
-
-    /**
-     * @param int|null $parallelLimit
-     * @return $this
-     */
-    public function setParallelLimit(?int $parallelLimit): static
-    {
-        $this->parallelLimit = $parallelLimit;
-        return $this;
     }
 
     /**
@@ -256,25 +302,6 @@ class Taskmaster
     {
         $this->options->setPhpExecutable($phpExecutable);
         return $this;
-    }
-
-    /**
-     * @param ProxyInterface|null $proxy
-     * @return $this
-     */
-    public function setProxy(?ProxyInterface $proxy): static
-    {
-        $proxy->setOptions($this->options)->start();
-        $this->proxy = $proxy;
-        return $this;
-    }
-
-    /**
-     * @return ProxyInterface|null
-     */
-    public function getProxy(): ?ProxyInterface
-    {
-        return $this->proxy;
     }
 
     public function getOptions(): TaskmasterOptions
