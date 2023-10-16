@@ -18,7 +18,9 @@ class SyncRuntime extends Runtime
 
     public function receiveRequest(RequestInterface $request): ?ResponseInterface
     {
-        return $this->handleRequest($request);
+        $result = $this->handleRequest($request);
+        $this->handleAfterRequest($request);
+        return $result;
     }
 
     public function sendRequest(RequestInterface $request): ResponsePromise

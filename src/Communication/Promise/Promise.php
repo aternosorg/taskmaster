@@ -37,7 +37,7 @@ class Promise
     public function then(Closure $callback): static
     {
         if ($this->resolved) {
-            $callback($this->value);
+            $callback($this->value, ...$this->getAdditionalResolveArguments());
             return $this;
         }
         $this->successHandlers[] = $callback;
@@ -51,7 +51,7 @@ class Promise
     public function catch(Closure $callback): static
     {
         if ($this->failed) {
-            $callback($this->exception);
+            $callback($this->exception, ...$this->getAdditionalRejectArguments());
             return $this;
         }
         $this->exceptionHandlers[] = $callback;
@@ -71,7 +71,7 @@ class Promise
         $this->resolved = true;
         $this->value = $value;
         foreach ($this->successHandlers as $callback) {
-            $callback($value);
+            $callback($value, ...$this->getAdditionalResolveArguments());
         }
         foreach ($this->fibers as $fiber) {
             $fiber->resume($value);
@@ -95,7 +95,7 @@ class Promise
             if (!$this->matchesFirstArgument($callback, $exception)) {
                 continue;
             }
-            $callback($exception);
+            $callback($exception, ...$this->getAdditionalRejectArguments());
         }
         foreach ($this->fibers as $fiber) {
             $fiber->throw($exception);
@@ -138,5 +138,21 @@ class Promise
         }
         $this->fibers[] = Fiber::getCurrent();
         return Fiber::suspend();
+    }
+
+    /**
+     * @return array
+     */
+    protected function getAdditionalResolveArguments(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getAdditionalRejectArguments(): array
+    {
+        return [];
     }
 }

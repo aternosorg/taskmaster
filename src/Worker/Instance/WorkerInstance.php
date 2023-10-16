@@ -9,9 +9,11 @@ use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Response\ErrorResponse;
 use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
+use Aternos\Taskmaster\Communication\Response\TaskResponse;
 use Aternos\Taskmaster\Communication\Response\WorkerFailedResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
+use Aternos\Taskmaster\Task\TaskMessageInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 use Throwable;
@@ -46,16 +48,18 @@ abstract class WorkerInstance implements WorkerInstanceInterface
 
     /**
      * @param ExecuteFunctionRequest $request
-     * @return mixed
+     * @return ResponseInterface
      */
-    protected function handleExecuteFunctionRequest(ExecuteFunctionRequest $request): mixed
+    protected function handleExecuteFunctionRequest(ExecuteFunctionRequest $request): ResponseInterface
     {
         $function = $request->getFunction();
         $arguments = $request->getArguments();
         try {
-            return $this->currentTask->$function(...$arguments);
+            $request->applyToTask($this->currentTask);
+            $result = $this->currentTask->$function(...$arguments);
+            return (new TaskResponse($request->getRequestId(), $result))->loadFromTask($this->currentTask);
         } catch (\Exception $exception) {
-            return new ExceptionResponse($request->getRequestId(), $exception);
+            return (new ExceptionResponse($request->getRequestId(), $exception))->loadFromTask($this->currentTask);
         }
     }
 
@@ -79,6 +83,9 @@ abstract class WorkerInstance implements WorkerInstanceInterface
         $promise = $this->sendRequest($request);
         $this->currentResponsePromise = $promise;
         $promise->then(function (ResponseInterface $response) {
+            if ($response instanceof TaskMessageInterface) {
+                $response->applyToTask($this->currentTask);
+            }
             if ($response instanceof ErrorResponse) {
                 $this->currentTask->handleError($response);
             } else {
@@ -86,7 +93,10 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             }
             $this->currentTask = null;
             $this->currentResponsePromise = null;
-        })->catch(function (\Exception $exception) {
+        })->catch(function (\Exception $exception, ResponseInterface $response) {
+            if ($response instanceof TaskMessageInterface) {
+                $response->applyToTask($this->currentTask);
+            }
             $this->currentTask->handleError(new ExceptionResponse(0, $exception));
             $this->currentTask = null;
             $this->currentResponsePromise = null;

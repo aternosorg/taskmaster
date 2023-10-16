@@ -3,8 +3,10 @@
 namespace Aternos\Taskmaster\Task;
 
 use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
+use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Response\ErrorResponse;
+use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
 use InvalidArgumentException;
@@ -42,8 +44,23 @@ abstract class Task implements TaskInterface
             $function = $reflectionFunction->getName();
         }
 
-        $request = new ExecuteFunctionRequest($function, $arguments);
-        return new ResponseDataPromise($this->runtime->sendRequest($request));
+        $request = (new ExecuteFunctionRequest($function, $arguments))->loadFromTask($this);
+        $responsePromise = $this->runtime->sendRequest($request)
+            ->then($this->handleTaskResponse(...))
+            ->catch(fn(\Exception $e, ResponseInterface $response) => $this->handleTaskResponse($response));
+        return new ResponseDataPromise($responsePromise);
+    }
+
+    /**
+     * @param ResponseInterface $response
+     * @return void
+     */
+    protected function handleTaskResponse(ResponseInterface $response): void
+    {
+        if (!$response instanceof TaskMessageInterface) {
+            return;
+        }
+        $response->applyToTask($this);
     }
 
     /**

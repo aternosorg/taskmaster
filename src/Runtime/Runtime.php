@@ -6,7 +6,8 @@ use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
-use Aternos\Taskmaster\Communication\Response\PhpErrorResponse;
+use Aternos\Taskmaster\Communication\Response\TaskResponse;
+use Aternos\Taskmaster\Communication\ResponseInterface;
 use Exception;
 use Fiber;
 use Throwable;
@@ -20,6 +21,7 @@ abstract class Runtime implements RuntimeInterface
     public function __construct()
     {
         $this->registerRequestHandler(RunTaskRequest::class, $this->runTask(...));
+        $this->registerAfterRequestHandler(RunTaskRequest::class, $this->setReady(...));
     }
 
     abstract protected function update(): static;
@@ -35,7 +37,7 @@ abstract class Runtime implements RuntimeInterface
     /**
      * @throws Throwable
      */
-    protected function runTask(RunTaskRequest $request): mixed
+    protected function runTask(RunTaskRequest $request): ResponseInterface
     {
         $this->currentTaskRequest = $request;
         $request->task->setRuntime($this);
@@ -47,9 +49,8 @@ abstract class Runtime implements RuntimeInterface
             }
             $result = $fiber->getReturn();
         } catch (Exception $exception) {
-            $result = new ExceptionResponse($request->getRequestId(), $exception);
+            return (new ExceptionResponse($request->getRequestId(), $exception))->loadFromTask($request->task);
         }
-        $this->setReady();
-        return $result;
+        return (new TaskResponse($request->getRequestId(), $result))->loadFromTask($request->task);
     }
 }

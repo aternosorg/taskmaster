@@ -56,6 +56,7 @@ trait SocketCommunicatorTrait
                     if ($response) {
                         $this->socket->sendMessage($response);
                     }
+                    $this->handleAfterRequest($message);
                     continue;
                 }
                 if ($message instanceof ResponseInterface) {
@@ -79,4 +80,10 @@ trait SocketCommunicatorTrait
      * @return ResponseInterface|null
      */
     abstract protected function handleRequest(RequestInterface $request): ?ResponseInterface;
+
+    /**
+     * @param RequestInterface $request
+     * @return void
+     */
+    abstract protected function handleAfterRequest(RequestInterface $request): void;
 }

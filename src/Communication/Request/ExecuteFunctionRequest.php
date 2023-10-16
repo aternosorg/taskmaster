@@ -2,9 +2,7 @@
 
 namespace Aternos\Taskmaster\Communication\Request;
 
-use Aternos\Taskmaster\Communication\Request;
-
-class ExecuteFunctionRequest extends Request
+class ExecuteFunctionRequest extends TaskRequest
 {
     public function __construct(protected string $function, protected array $arguments = [])
     {
@@ -26,6 +24,4 @@ class ExecuteFunctionRequest extends Request
     {
         return $this->arguments;
     }
-
-
 }
