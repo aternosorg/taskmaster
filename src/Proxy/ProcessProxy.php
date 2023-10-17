@@ -10,6 +10,8 @@ use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
+use Aternos\Taskmaster\Task\Task;
+use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 
 class ProcessProxy extends Proxy
@@ -69,6 +71,9 @@ class ProcessProxy extends Proxy
     public function stop(): static
     {
         $this->sendRequest(new TerminateRequest());
+        while ($this->process->isRunning()) {
+            usleep(Taskmaster::SOCKET_WAIT_TIME);
+        }
         return $this;
     }
 

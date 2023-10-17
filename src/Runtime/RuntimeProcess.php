@@ -45,7 +45,9 @@ class RuntimeProcess
     public function stop(): bool
     {
         $this->socket->close();
-        return proc_terminate($this->process);
+        $result = proc_terminate($this->process);
+        proc_close($this->process);
+        return $result;
     }
 
     /**

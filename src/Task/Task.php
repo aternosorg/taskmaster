@@ -18,6 +18,7 @@ abstract class Task implements TaskInterface
 {
     protected ?RuntimeInterface $runtime = null;
     protected ?string $group = null;
+    protected mixed $result = null;
 
     /**
      * @param RuntimeInterface $runtime
@@ -27,6 +28,14 @@ abstract class Task implements TaskInterface
     {
         $this->runtime = $runtime;
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResult(): mixed
+    {
+        return $this->result;
     }
 
     /**
@@ -79,8 +88,13 @@ abstract class Task implements TaskInterface
         return $this->callAsync($function, ...$arguments)->wait();
     }
 
+    /**
+     * @param mixed $result
+     * @return void
+     */
     public function handleResult(mixed $result): void
     {
+        $this->result = $result;
     }
 
     public function handleError(ErrorResponse $error): void

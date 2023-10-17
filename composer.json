@@ -18,8 +18,10 @@
             "email": "matthias@aternos.org"
         }
     ],
-    "require": {},
     "suggest": {
         "ext-pcntl": "Required for the ForkEnvironment"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.4"
     }
 }
