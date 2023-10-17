@@ -3,8 +3,17 @@
 namespace Aternos\Taskmaster\Communication\Socket;
 
 use Aternos\Taskmaster\Communication\MessageInterface;
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Generator;
 
+/**
+ * Class Socket
+ *
+ * The default socket that wraps a stream resource, e.g. opened with {@link fopen()} or {@link stream_socket_pair()}.
+ *
+ * @package Aternos\Taskmaster\Communication\Socket
+ */
 class Socket implements SocketInterface, SelectableSocketInterface
 {
     /**
@@ -19,9 +28,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @param MessageInterface $message
-     * @return bool
-     * @throws SocketWriteException
+     * @inheritDoc
      */
     public function sendMessage(MessageInterface $message): bool
     {
@@ -29,8 +36,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @return Generator
-     * @throws SocketReadException
+     * @inheritDoc
      */
     public function receiveMessages(): Generator
     {
@@ -40,8 +46,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @return Generator<string>
-     * @throws SocketReadException
+     * @inheritDoc
      */
     public function receiveRaw(): Generator
     {
@@ -59,6 +64,8 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
+     * Get the stream resource
+     *
      * @return resource
      */
     public function getStream(): mixed
@@ -67,7 +74,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @return void
+     * @inheritDoc
      */
     public function close(): void
     {
@@ -78,9 +85,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @param string $data
-     * @return bool
-     * @throws SocketWriteException
+     * @inheritDoc
      */
     public function sendRaw(string $data): bool
     {
@@ -105,7 +110,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @return mixed
+     * @inheritDoc
      */
     public function getSelectableReadStream(): mixed
     {
@@ -113,8 +118,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     }
 
     /**
-     * @param int $microseconds
-     * @return void
+     * @inheritDoc
      */
     public function waitForNewData(int $microseconds): void
     {

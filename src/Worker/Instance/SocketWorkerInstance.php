@@ -2,8 +2,8 @@
 
 namespace Aternos\Taskmaster\Worker\Instance;
 
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketException;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
-use Aternos\Taskmaster\Communication\Socket\SocketException;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
 use Aternos\Taskmaster\Worker\WorkerInstanceStatus;

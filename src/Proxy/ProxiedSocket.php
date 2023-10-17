@@ -21,14 +21,6 @@ class ProxiedSocket implements SocketInterface
         return $this->socket->receiveProxyMessages($this->id);
     }
 
-    /**
-     * @return mixed
-     */
-    public function getStream(): mixed
-    {
-        return $this->socket->getStream();
-    }
-
     public function close(): void
     {
     }

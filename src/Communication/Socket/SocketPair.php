@@ -2,11 +2,24 @@
 
 namespace Aternos\Taskmaster\Communication\Socket;
 
+/**
+ * Class SocketPair
+ *
+ * Creates a pair of connected sockets using {@link stream_socket_pair()} and wraps them in {@link Socket} objects.
+ * Also clearly defines which socket is the parent and which is the child.
+ *
+ * @package Aternos\Taskmaster\Communication\Socket
+ */
 class SocketPair
 {
     protected Socket $parentSocket;
     protected Socket $childSocket;
 
+    /**
+     * SocketPair constructor.
+     *
+     * Creates the socket pair and wraps the sockets in {@link Socket} objects.
+     */
     public function __construct()
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
@@ -15,6 +28,8 @@ class SocketPair
     }
 
     /**
+     * Close the child socket
+     *
      * @return void
      */
     public function closeChildSocket(): void
@@ -23,6 +38,8 @@ class SocketPair
     }
 
     /**
+     * Close the parent socket
+     *
      * @return void
      */
     public function closeParentSocket(): void
@@ -31,6 +48,8 @@ class SocketPair
     }
 
     /**
+     * Get the parent socket
+     *
      * @return Socket
      */
     public function getParentSocket(): Socket
@@ -39,6 +58,8 @@ class SocketPair
     }
 
     /**
+     * Get the child socket
+     *
      * @return Socket
      */
     public function getChildSocket(): Socket

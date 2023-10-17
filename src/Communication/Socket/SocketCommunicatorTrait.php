@@ -2,11 +2,23 @@
 
 namespace Aternos\Taskmaster\Communication\Socket;
 
+use Aternos\Taskmaster\Communication\CommunicatorInterface;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
+use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\RequestInterface;
 use Aternos\Taskmaster\Communication\ResponseInterface;
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Throwable;
 
+/**
+ * Trait SocketCommunicatorTrait
+ *
+ * Trait for all classes that communicate via a socket, e.g. worker instances, runtimes or proxies.
+ * This trait works best with the {@link RequestHandlingTrait} to fulfill the {@link CommunicatorInterface} interface.
+ *
+ * @package Aternos\Taskmaster\Communication\Socket
+ */
 trait SocketCommunicatorTrait
 {
     protected ?SocketInterface $socket = null;
@@ -17,8 +29,13 @@ trait SocketCommunicatorTrait
     protected array $promises = [];
 
     /**
+     * Send an async request through the socket
+     *
+     * Implements {@link CommunicatorInterface::sendRequest()}
+     *
      * @param RequestInterface $request
      * @return ResponsePromise
+     * @throws Throwable
      */
     public function sendRequest(RequestInterface $request): ResponsePromise
     {
@@ -31,6 +48,10 @@ trait SocketCommunicatorTrait
     }
 
     /**
+     * Get the promise for a request
+     *
+     * Returns an existing promise or creates a new one.
+     *
      * @param RequestInterface $request
      * @return ResponsePromise
      */
@@ -44,7 +65,9 @@ trait SocketCommunicatorTrait
     }
 
     /**
-     * @return SocketCommunicatorTrait
+     * Update the socket by reading new messages and handling them
+     *
+     * @return $this
      * @throws Throwable
      */
     public function update(): static
@@ -70,18 +93,29 @@ trait SocketCommunicatorTrait
     }
 
     /**
+     * Handle a failed socket communication
+     *
      * @param string|null $reason
      * @return $this
      */
     abstract protected function handleFail(?string $reason = null): static;
 
     /**
+     * Handle a request
+     *
+     * You can use the implementation in {@link RequestHandlingTrait::handleRequest()}.
+     *
      * @param RequestInterface $request
      * @return ResponseInterface|null
      */
     abstract protected function handleRequest(RequestInterface $request): ?ResponseInterface;
 
     /**
+     * Handle a request after it has been handled by {@link SocketCommunicatorTrait::handleRequest()}
+     *
+     * Can be used to do something after a request has sent its response.
+     * You can use the implementation in {@link RequestHandlingTrait::handleAfterRequest()}.
+     *
      * @param RequestInterface $request
      * @return void
      */

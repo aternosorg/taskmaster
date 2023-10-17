@@ -2,12 +2,24 @@
 
 namespace Aternos\Taskmaster\Communication\Promise;
 
+use Aternos\Taskmaster\Task\TaskInterface;
 use Closure;
 use Exception;
 use Fiber;
 use ReflectionException;
 use Throwable;
 
+/**
+ * Class Promise
+ *
+ * Promise implementation, mainly used internally as return value for async functions
+ * An async function can immediately return a promise and resolve it later
+ * You can add success and exception handlers to the promise using {@see Promise::then()} and {@see Promise::catch()}
+ * The promise can be resolved using {@see Promise::resolve()} and rejected using {@see Promise::reject()}
+ * If you are in a fiber (e.g. in {@link TaskInterface::run()}), you can wait for the promise to resolve or throw using {@see Promise::wait()}.
+ *
+ * @package Aternos\Taskmaster\Communication\Promise
+ */
 class Promise
 {
     /**
@@ -31,6 +43,10 @@ class Promise
     protected bool $failed = false;
 
     /**
+     * Add a success handler to the promise, the promise result will be passed as first argument to the callback
+     *
+     * Success handlers are called in the order they were added.
+     *
      * @param Closure $callback
      * @return $this
      */
@@ -45,6 +61,13 @@ class Promise
     }
 
     /**
+     * Add an exception handler to the promise, the exception will be passed as first argument to the callback
+     *
+     * Exception handlers can define which exception types they want to handle by adding a type hint to the first argument.
+     * If the exception does not match the type hint, the handler will not be called.
+     * If no type hint is defined, the handler will be called for all exceptions.
+     * Exception handlers are called in the order they were added.
+     *
      * @param Closure $callback
      * @return $this
      */
@@ -59,6 +82,12 @@ class Promise
     }
 
     /**
+     * Resolve the promise
+     *
+     * A promise can only be resolved once.
+     * All success handlers will be called with the given value.
+     * After that all waiting fibers will be resumed with the given value.
+     *
      * @param mixed $value
      * @return $this
      * @throws Throwable
@@ -80,6 +109,12 @@ class Promise
     }
 
     /**
+     * Reject the promise with an exception
+     *
+     * A promise can only be rejected once.
+     * Matching exception handlers will be called with the given exception, see {@see Promise::catch()}.
+     * After that all waiting fibers will be resumed by throwing the given exception.
+     *
      * @param Exception $exception
      * @return $this
      * @throws Throwable
@@ -104,6 +139,8 @@ class Promise
     }
 
     /**
+     * Check if the exception matches the first argument type hint of the given callback
+     *
      * @throws ReflectionException
      */
     protected function matchesFirstArgument(Closure $callback, Exception $exception): bool
@@ -122,6 +159,10 @@ class Promise
     }
 
     /**
+     * Wait for the promise to resolve or throw
+     *
+     * This method can only be called from within a fiber, e.g. in {@link TaskInterface::run()}.
+     *
      * @return mixed
      * @throws Throwable
      */
@@ -141,6 +182,8 @@ class Promise
     }
 
     /**
+     * Get additional arguments for success handlers
+     *
      * @return array
      */
     protected function getAdditionalResolveArguments(): array
@@ -149,6 +192,8 @@ class Promise
     }
 
     /**
+     * Get additional arguments for exception handlers
+     *
      * @return array
      */
     protected function getAdditionalRejectArguments(): array

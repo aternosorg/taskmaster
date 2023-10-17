@@ -6,19 +6,22 @@ use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Throwable;
 
+/**
+ * Class ResponsePromise
+ *
+ * Promise adjusted for response handling.
+ * Rejects with the exception from the response if the response is an {@link ExceptionResponse}.
+ * Also adds the response as second argument in catch handlers.
+ *
+ * @package Aternos\Taskmaster\Communication\Promise
+ */
 class ResponsePromise extends Promise
 {
     protected ?ResponseInterface $response = null;
 
     /**
-     * @return ResponseInterface
-     * @throws Throwable
+     * @inheritDoc
      */
-    public function wait(): ResponseInterface
-    {
-        return parent::wait();
-    }
-
     public function resolve(mixed $value = null): static
     {
         $this->response = $value;
@@ -30,7 +33,7 @@ class ResponsePromise extends Promise
     }
 
     /**
-     * @return ResponseInterface[]|null[]
+     * @inheritDoc
      */
     protected function getAdditionalRejectArguments(): array
     {
@@ -38,6 +41,8 @@ class ResponsePromise extends Promise
     }
 
     /**
+     * Get the response, can also be retrieved in an exception handler as second argument
+     *
      * @return ResponseInterface|null
      */
     public function getResponse(): ?ResponseInterface

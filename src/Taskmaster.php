@@ -15,8 +15,22 @@ use Aternos\Taskmaster\Worker\SocketWorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerStatus;
 
+/**
+ * Class Taskmaster
+ *
+ * The Taskmaster class is the main class of the Taskmaster library,
+ * it manages the workers and tasks and assigns tasks to workers.
+ *
+ * @package Aternos\Taskmaster
+ */
 class Taskmaster
 {
+    /**
+     * Time to wait in microseconds for new updates
+     * Also used as timeout for {@link stream_select()}, e.g. in {@link Taskmaster::waitForNewUpdate()}
+     *
+     * @var int
+     */
     public const SOCKET_WAIT_TIME = 1000;
 
     /**
@@ -41,12 +55,20 @@ class Taskmaster
 
     protected TaskmasterOptions $options;
 
+    /**
+     * Taskmaster constructor
+     */
     public function __construct()
     {
         $this->options = new TaskmasterOptions();
     }
 
     /**
+     * Add a task to the task list
+     *
+     * When using a task factory, the task will only be executed after
+     * the task factory has stopped creating tasks.
+     *
      * @param TaskInterface ...$task
      * @return $this
      */
@@ -59,6 +81,12 @@ class Taskmaster
     }
 
     /**
+     * Add a task factory
+     *
+     * Task factories are used to create tasks on demand, e.g. when a task is finished.
+     * Task factories are requested for new tasks in the order they are added.
+     * Only if the first task factory does not return a task, the next task factory is requested.
+     *
      * @param TaskFactoryInterface $taskFactory
      * @return $this
      */
@@ -69,6 +97,8 @@ class Taskmaster
     }
 
     /**
+     * Run the update cycle until all tasks are finished
+     *
      * @return $this
      */
     public function wait(): static
@@ -79,6 +109,15 @@ class Taskmaster
         return $this;
     }
 
+    /**
+     * Run the update cycle until all tasks are assigned to a worker
+     *
+     * This can be used to add new tasks if necessary.
+     * This cannot be used with task factories.
+     * It's still necessary to wait for all tasks to finish later, e.g. with {@link Taskmaster::wait()}.
+     *
+     * @return $this
+     */
     public function waitUntilAllTasksAreAssigned(): static
     {
         do {
@@ -88,6 +127,11 @@ class Taskmaster
     }
 
     /**
+     * Stop all workers and proxies
+     *
+     * Has to be called after all tasks are done, e.g. after {@link Taskmaster::wait()}.
+     * Can be called earlier to kill workers and their tasks.
+     *
      * @return $this
      */
     public function stop(): static
@@ -102,17 +146,23 @@ class Taskmaster
     }
 
     /**
+     * Check if there are still workers working
+     *
+     * If you are running the update cycle manually, you can use this as break condition.
+     *
      * @return bool
      */
     public function isWorking(): bool
     {
-        return count($this->getRunningWorkers()) > 0;
+        return count($this->getWorkingWorkers()) > 0;
     }
 
     /**
+     * Get all workers that are currently working
+     *
      * @return array
      */
-    protected function getRunningWorkers(): array
+    protected function getWorkingWorkers(): array
     {
         $runningWorkers = [];
         foreach ($this->workers as $worker) {
@@ -124,6 +174,13 @@ class Taskmaster
     }
 
     /**
+     * Update workers and proxies, e.g. assign tasks, read sockets, handle requests etc.
+     *
+     * This method has to be called in a loop to keep the workers and proxies running
+     * as done by {@link Taskmaster::wait()} or {@link Taskmaster::waitUntilAllTasksAreAssigned()}.
+     *
+     * This method also waits a little bit if there are no workers that need to be updated to reduce CPU load.
+     *
      * @return void
      */
     public function update(): void
@@ -140,6 +197,8 @@ class Taskmaster
     }
 
     /**
+     * Check if a worker is available and assign the next task to it if possible
+     *
      * @param WorkerInterface $worker
      * @return void
      */
@@ -156,6 +215,11 @@ class Taskmaster
     }
 
     /**
+     * Wait a little bit if there are no workers that need to be updated to reduce CPU load
+     *
+     * Uses {@link stream_select()} to wait for new data on worker sockets if possible.
+     * Doesn't wait if there are only sync workers.
+     *
      * @return void
      */
     protected function waitForNewUpdate(): void
@@ -173,6 +237,8 @@ class Taskmaster
     }
 
     /**
+     * Check if there are only sync workers
+     *
      * @return bool
      */
     protected function hasOnlySyncWorkers(): bool
@@ -186,6 +252,8 @@ class Taskmaster
     }
 
     /**
+     * Get all streams that can be used with {@link stream_select()} from workers and proxies
+     *
      * @return resource[]
      */
     protected function getSelectableStreams(): array
@@ -210,6 +278,11 @@ class Taskmaster
     }
 
     /**
+     * Get a stream that can be used with {@link stream_select()} from a socket
+     *
+     * A socket has to implement the SelectableSocketInterface and return
+     * a valid stream from getSelectableReadStream().
+     *
      * @param SocketInterface|null $socket
      * @return resource|null
      */
@@ -229,6 +302,8 @@ class Taskmaster
     }
 
     /**
+     * Set all workers, replacing existing workers
+     *
      * @param WorkerInterface[] $workers
      * @return $this
      */
@@ -242,6 +317,11 @@ class Taskmaster
     }
 
     /**
+     * Add a worker
+     *
+     * If the worker has a proxy, the proxy will be started if it's not running yet and added to the proxy list.
+     * The worker also gets this taskmaster instance assigned.
+     *
      * @param WorkerInterface $worker
      * @return $this
      */
@@ -262,6 +342,11 @@ class Taskmaster
     }
 
     /**
+     * Add a worker multiple times by cloning it
+     *
+     * The worker should not be running yet.
+     * Only clones of the worker will be added, the original worker will not be added.
+     *
      * @param WorkerInterface $worker
      * @param int $count
      * @return $this
@@ -275,6 +360,10 @@ class Taskmaster
     }
 
     /**
+     * Automatically detect extensions and add workers accordingly
+     *
+     * Currently only pcntl is detected and used to add fork workers with process workers as fallback.
+     *
      * @param int $count
      * @return $this
      */
@@ -291,10 +380,16 @@ class Taskmaster
     }
 
     /**
+     * Get the next task from a task factory or the task list
+     *
+     * If a group is specified, only tasks with this group will be returned.
+     * Task factories are requested first in the order they are added.
+     * Tasks from the task list are only returned if no task factory returns a task.
+     *
      * @param string|null $group
      * @return TaskInterface|null
      */
-    public function getNextTask(?string $group = null): ?TaskInterface
+    protected function getNextTask(?string $group = null): ?TaskInterface
     {
         foreach ($this->taskFactories as $taskFactory) {
             $groups = $taskFactory->getGroups();
@@ -317,6 +412,11 @@ class Taskmaster
     }
 
     /**
+     * Set the bootstrap file, e.g. the composer autoload file
+     *
+     * If no bootstrap file is set, Taskmaster will try to find the composer autoload file,
+     * see {@link TaskmasterOptions::autoDetectBootstrap()}
+     *
      * @param string|null $bootstrap
      * @return $this
      */
@@ -327,6 +427,10 @@ class Taskmaster
     }
 
     /**
+     * Set the PHP executable
+     *
+     * If no executable is set, just "php" is used which should follow the PATH environment variable.
+     *
      * @param string $phpExecutable
      * @return $this
      */
@@ -336,12 +440,23 @@ class Taskmaster
         return $this;
     }
 
+    /**
+     * Get the current {@link TaskmasterOptions} instance
+     *
+     * @return TaskmasterOptions
+     */
     public function getOptions(): TaskmasterOptions
     {
         return $this->options;
     }
 
     /**
+     * Get all queued tasks from the task list
+     *
+     * This will not return any tasks from task factories.
+     * Tasks are removed from the task list when they are assigned to a worker.
+     * Therefore, you have to keep track of the tasks yourself if you want to get the results later.
+     *
      * @return TaskInterface[]
      */
     public function getTasks(): array

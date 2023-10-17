@@ -3,8 +3,8 @@
 namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
-use Aternos\Taskmaster\Communication\Request\StartWorkerRequest;
-use Aternos\Taskmaster\Communication\Request\StopWorkerRequest;
+use Aternos\Taskmaster\Communication\Request\StartWorkerInstanceRequest;
+use Aternos\Taskmaster\Communication\Request\StopWorkerInstanceRequest;
 use Aternos\Taskmaster\Communication\Request\TerminateRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
@@ -29,7 +29,7 @@ class ProcessProxy extends Proxy
      */
     public function startWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
-        return $this->sendRequest(new StartWorkerRequest($worker));
+        return $this->sendRequest(new StartWorkerInstanceRequest($worker));
     }
 
     /**
@@ -38,7 +38,7 @@ class ProcessProxy extends Proxy
      */
     public function stopWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
-        return $this->sendRequest(new StopWorkerRequest($worker->getId()));
+        return $this->sendRequest(new StopWorkerInstanceRequest($worker->getId()));
     }
 
     /**

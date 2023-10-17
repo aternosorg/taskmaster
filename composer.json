@@ -19,7 +19,8 @@
         }
     ],
     "suggest": {
-        "ext-pcntl": "Required for the ForkEnvironment"
+        "ext-pcntl": "Required for fork workers",
+        "ext-parallel": "Required for thread workers"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.4"

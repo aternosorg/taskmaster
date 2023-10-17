@@ -3,9 +3,9 @@
 namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\MessageInterface;
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
+use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Aternos\Taskmaster\Communication\Socket\Socket;
-use Aternos\Taskmaster\Communication\Socket\SocketReadException;
-use Aternos\Taskmaster\Communication\Socket\SocketWriteException;
 use Generator;
 
 class ProxySocket extends Socket implements ProxySocketInterface
