@@ -4,8 +4,10 @@ namespace Aternos\Taskmaster\Test\Environment;
 
 use Aternos\Taskmaster\Environment\Fork\ForkWorker;
 use Aternos\Taskmaster\Worker\WorkerInterface;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
-class ForkWorkerTest extends AsyncWorkerTestCase
+#[RequiresPhpExtension("pcntl")]
+class ForkWorkerTest extends ExitableAsyncWorkerTestCase
 {
     protected function createWorker(): WorkerInterface
     {

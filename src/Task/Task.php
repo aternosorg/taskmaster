@@ -19,6 +19,7 @@ abstract class Task implements TaskInterface
     protected ?RuntimeInterface $runtime = null;
     protected ?string $group = null;
     protected mixed $result = null;
+    protected ?ErrorResponse $error = null;
 
     /**
      * @param RuntimeInterface $runtime
@@ -36,6 +37,14 @@ abstract class Task implements TaskInterface
     public function getResult(): mixed
     {
         return $this->result;
+    }
+
+    /**
+     * @return ErrorResponse|null
+     */
+    public function getError(): ?ErrorResponse
+    {
+        return $this->error;
     }
 
     /**
@@ -99,6 +108,7 @@ abstract class Task implements TaskInterface
 
     public function handleError(ErrorResponse $error): void
     {
+        $this->error = $error;
         fwrite(STDERR, $error->getError() . PHP_EOL);
     }
 

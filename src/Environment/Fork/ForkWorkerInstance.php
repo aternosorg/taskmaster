@@ -2,7 +2,6 @@
 
 namespace Aternos\Taskmaster\Environment\Fork;
 
-use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
@@ -20,6 +19,7 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
             while (!$this->hasDied()) {
                 usleep(Taskmaster::SOCKET_WAIT_TIME);
             }
+            $this->pid = null;
         }
         return $this;
     }

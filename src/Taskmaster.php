@@ -3,6 +3,7 @@
 namespace Aternos\Taskmaster;
 
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
+use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Environment\Fork\ForkWorker;
 use Aternos\Taskmaster\Environment\Process\ProcessWorker;
 use Aternos\Taskmaster\Environment\Sync\SyncWorker;
@@ -195,25 +196,36 @@ class Taskmaster
                 continue;
             }
             $socket = $worker->getSocket();
-            if (!$socket) {
-                continue;
+            if ($stream = $this->getSelectableReadStreamFromSocket($socket)) {
+                $streams[] = $stream;
             }
-            if (!$socket instanceof SelectableSocketInterface) {
-                continue;
-            }
-            $streams[] = $socket->getSelectableReadStream();
         }
         foreach ($this->proxies as $proxy) {
             $socket = $proxy->getSocket();
-            if (!$socket) {
-                continue;
+            if ($stream = $this->getSelectableReadStreamFromSocket($socket)) {
+                $streams[] = $stream;
             }
-            if (!$socket instanceof SelectableSocketInterface) {
-                continue;
-            }
-            $streams[] = $socket->getSelectableReadStream();
         }
         return $streams;
+    }
+
+    /**
+     * @param SocketInterface|null $socket
+     * @return resource|null
+     */
+    protected function getSelectableReadStreamFromSocket(?SocketInterface $socket): mixed
+    {
+        if (!$socket) {
+            return null;
+        }
+        if (!$socket instanceof SelectableSocketInterface) {
+            return null;
+        }
+        $stream = $socket->getSelectableReadStream();
+        if (!is_resource($stream) || feof($stream)) {
+            return null;
+        }
+        return $stream;
     }
 
     /**

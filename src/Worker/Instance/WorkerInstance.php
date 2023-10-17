@@ -121,6 +121,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     {
         $this->status = WorkerInstanceStatus::FAILED;
         $this->currentResponsePromise?->resolve(new WorkerFailedResponse($reason));
+        $this->stop();
         return $this;
     }
 }

@@ -2,11 +2,15 @@
 
 namespace Aternos\Taskmaster\Test\Environment;
 
+use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
+use Aternos\Taskmaster\Task\Task;
+use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Task\AdditionTask;
 use Aternos\Taskmaster\Test\Task\CallbackTask;
 use Aternos\Taskmaster\Test\Task\EmptyTask;
-use Aternos\Taskmaster\Test\Task\ExceptionTask;
+use Aternos\Taskmaster\Test\Task\ChildExceptionTask;
+use Aternos\Taskmaster\Test\Task\ParentExceptionTask;
 use Aternos\Taskmaster\Test\Task\SynchronizedFieldTask;
 use PHPUnit\Framework\TestCase;
 
@@ -21,6 +25,21 @@ abstract class WorkerTestCase extends TestCase
         $this->createTaskmaster();
     }
 
+    /**
+     * @param TaskInterface $task
+     * @param int $amount
+     * @return TaskInterface[]
+     */
+    protected function addTasks(TaskInterface $task, int $amount): array
+    {
+        $tasks = [];
+        for ($i = 0; $i < $amount; $i++) {
+            $clone = clone $task;
+            $tasks[] = $clone;
+            $this->taskmaster->addTask($clone);
+        }
+        return $tasks;
+    }
 
     public function testRunEmptyTask(): void
     {
@@ -34,34 +53,24 @@ abstract class WorkerTestCase extends TestCase
         $task = new AdditionTask(1, 2);
         $this->taskmaster->addTask($task);
         $this->taskmaster->wait();
-        $this->assertEquals(3, $task->getExpectedResult());
         $this->assertEquals(3, $task->getResult());
     }
 
     public function testRunMultipleTasks(): void
     {
-        $tasks = [];
-        for ($i = 0; $i < 10; $i++) {
-            $task = new AdditionTask($i, $i + 1);
-            $tasks[] = $task;
-            $this->taskmaster->addTask($task);
-        }
+        $tasks = $this->addTasks(new AdditionTask(1, 2), 10);
         $this->assertCount(10, $tasks);
+        $this->assertCount(10, $this->taskmaster->getTasks());
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
-            $this->assertEquals($task->getExpectedResult(), $task->getResult());
+            $this->assertEquals(3, $task->getResult());
         }
     }
 
     public function testParentCallback(): void
     {
         CallbackTask::resetCounter();
-        $tasks = [];
-        for ($i = 0; $i < 10; $i++) {
-            $task = new CallbackTask(3);
-            $tasks[] = $task;
-            $this->taskmaster->addTask($task);
-        }
+        $tasks = $this->addTasks(new CallbackTask(3), 10);
         $this->taskmaster->wait();
         $result = [];
         foreach ($tasks as $task) {
@@ -75,12 +84,7 @@ abstract class WorkerTestCase extends TestCase
 
     public function testSynchronizedField(): void
     {
-        $tasks = [];
-        for ($i = 0; $i < 10; $i++) {
-            $task = new SynchronizedFieldTask(3);
-            $tasks[] = $task;
-            $this->taskmaster->addTask($task);
-        }
+        $tasks = $this->addTasks(new SynchronizedFieldTask(3), 10);
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
             $this->assertEquals(6, $task->getResult());
@@ -89,16 +93,25 @@ abstract class WorkerTestCase extends TestCase
 
     public function testChildException(): void
     {
-        $tasks = [];
-        for ($i = 0; $i < 10; $i++) {
-            $task = new ExceptionTask("Test");
-            $tasks[] = $task;
-            $this->taskmaster->addTask($task);
-        }
+        $tasks = $this->addTasks(new ChildExceptionTask("Test"), 10);
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
-            $this->assertInstanceOf(\Exception::class, $task->getResult());
-            $this->assertEquals("Test", $task->getResult()->getMessage());
+            $error = $task->getError();
+            $this->assertInstanceOf(ExceptionResponse::class, $error);
+            $this->assertInstanceOf(\Exception::class, $error->getException());
+            $this->assertEquals("Test", $error->getException()->getMessage());
+        }
+    }
+
+    public function testParentException(): void
+    {
+        $tasks = $this->addTasks(new ParentExceptionTask("Test"), 10);
+        $this->taskmaster->wait();
+        foreach ($tasks as $task) {
+            $error = $task->getError();
+            $this->assertInstanceOf(ExceptionResponse::class, $error);
+            $this->assertInstanceOf(\Exception::class, $error->getException());
+            $this->assertEquals("Test", $error->getException()->getMessage());
         }
     }
 

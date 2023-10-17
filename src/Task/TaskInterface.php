@@ -7,7 +7,7 @@ use Aternos\Taskmaster\Runtime\RuntimeInterface;
 
 interface TaskInterface
 {
-    public function run(): mixed;
+    public function run();
 
     public function handleResult(mixed $result): void;
 

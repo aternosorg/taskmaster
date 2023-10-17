@@ -104,7 +104,10 @@ class ProxyRuntime implements AsyncRuntimeInterface
             if (!$socket instanceof SelectableSocketInterface) {
                 continue;
             }
-            $streams[] = $socket->getSelectableReadStream();
+            $stream = $socket->getSelectableReadStream();
+            if (is_resource($stream) && !feof($stream)) {
+                $streams[] = $stream;
+            }
         }
         $streams[] = $this->proxySocket->getSelectableReadStream();
         return $streams;

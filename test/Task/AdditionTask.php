@@ -35,13 +35,4 @@ class AdditionTask extends Task
     {
         $this->result = $result;
     }
-
-    /**
-     * @return int
-     */
-    #[RunOnParent]
-    public function getExpectedResult(): int
-    {
-        return $this->a + $this->b;
-    }
 }

@@ -47,6 +47,7 @@ class RuntimeProcess
         $this->socket->close();
         $result = proc_terminate($this->process);
         proc_close($this->process);
+        $this->process = null;
         return $result;
     }
 
@@ -63,6 +64,9 @@ class RuntimeProcess
      */
     public function isRunning(): bool
     {
+        if (!$this->process) {
+            return false;
+        }
         return proc_get_status($this->process)["running"];
     }
 }

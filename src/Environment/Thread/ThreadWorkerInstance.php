@@ -16,7 +16,7 @@ class ThreadWorkerInstance extends ProxyableSocketWorkerInstance
      * @var ResponsePromise[]
      */
     protected array $promises = [];
-    protected Runtime $runtime;
+    protected ?Runtime $runtime = null;
     protected ?Future $future = null;
 
     public function start(): static

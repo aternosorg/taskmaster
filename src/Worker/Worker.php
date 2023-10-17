@@ -37,6 +37,11 @@ abstract class Worker implements WorkerInterface
         if ($this->instance === null || $this->instance->getStatus() === WorkerInstanceStatus::FAILED) {
             $this->instanceStarted = false;
             $this->instance = $this->createInstance();
+            if ($this->queuedTask) {
+                $this->startInstance();
+            } else {
+                $this->status = WorkerStatus::AVAILABLE;
+            }
         }
         return $this->instance;
     }
@@ -122,14 +127,14 @@ abstract class Worker implements WorkerInterface
     public function assignTask(TaskInterface $task): static
     {
         $this->status = WorkerStatus::WORKING;
+        $this->queuedTask = $task;
         $instance = $this->getInstance();
         if (!$this->instanceStarted) {
             $this->startInstance();
         }
         if ($instance->getStatus() === WorkerInstanceStatus::IDLE) {
             $this->getInstance()->runTask($task);
-        } else {
-            $this->queuedTask = $task;
+            $this->queuedTask = null;
         }
         return $this;
     }

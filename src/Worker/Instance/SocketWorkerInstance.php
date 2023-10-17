@@ -59,6 +59,7 @@ abstract class SocketWorkerInstance extends WorkerInstance implements SocketWork
         $this->socketUpdate();
         if ($this->status === WorkerInstanceStatus::IDLE || $this->status === WorkerInstanceStatus::WORKING) {
             if ($this->hasDied()) {
+                var_dump("worker died");
                 $this->handleFail("Worker exited unexpectedly.");
             }
         }
