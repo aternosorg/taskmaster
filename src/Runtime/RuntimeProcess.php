@@ -6,6 +6,14 @@ use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\TaskmasterOptions;
 
+/**
+ * Class RuntimeProcess
+ *
+ * Manages a process that executes an {@link AsyncRuntimeInterface}.
+ * Uses {@link proc_open()} to start the process.
+ *
+ * @package Aternos\Taskmaster\Runtime
+ */
 class RuntimeProcess
 {
     protected const BIN_PATH = __DIR__ . "/../../bin/runtime.php";
@@ -40,6 +48,8 @@ class RuntimeProcess
     }
 
     /**
+     * Stop the runtime process
+     *
      * @return bool
      */
     public function stop(): bool
@@ -52,6 +62,8 @@ class RuntimeProcess
     }
 
     /**
+     * Get the socket to communicate with the runtime process
+     *
      * @return SocketInterface
      */
     public function getSocket(): SocketInterface
@@ -60,6 +72,8 @@ class RuntimeProcess
     }
 
     /**
+     * Check if the runtime process is currently running
+     *
      * @return bool
      */
     public function isRunning(): bool

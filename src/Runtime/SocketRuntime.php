@@ -11,6 +11,14 @@ use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Taskmaster;
 
+/**
+ * Class SocketRuntime
+ *
+ * A runtime that communicates via a {@link SocketInterface}.
+ * If no socket is provided, the runtime will open a socket on file descriptor 3.
+ *
+ * @package Aternos\Taskmaster\Runtime
+ */
 class SocketRuntime extends Runtime implements AsyncRuntimeInterface
 {
     use SocketCommunicatorTrait;
@@ -31,6 +39,12 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
     }
 
     /**
+     * Error handler for {@link set_error_handler()}
+     *
+     * This handler will send a {@link PhpFatalErrorResponse} to the master if a fatal error occurs.
+     * Otherwise, the task will be notified about the error via {@link TaskInterface::handleUncriticalError()}.
+     * If {@link TaskInterface::handleUncriticalError()} returns false, the error will be handled by PHP.
+     *
      * @param int $errno
      * @param string $errstr
      * @param string $errfile
@@ -57,6 +71,9 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
         exit(1);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function start(): void
     {
         while (true) {
@@ -70,8 +87,7 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
     }
 
     /**
-     * @param string|null $reason
-     * @return $this
+     * @inheritDoc
      */
     protected function handleFail(?string $reason = null): static
     {

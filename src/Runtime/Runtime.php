@@ -2,6 +2,7 @@
 
 namespace Aternos\Taskmaster\Runtime;
 
+use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
@@ -12,12 +13,23 @@ use Exception;
 use Fiber;
 use Throwable;
 
+/**
+ * Class Runtime
+ *
+ * A runtime is the environment in which tasks are executed.
+ * It receives {@link RunTaskRequest}s and executes those tasks.
+ *
+ * @package Aternos\Taskmaster\Runtime
+ */
 abstract class Runtime implements RuntimeInterface
 {
     use RequestHandlingTrait;
 
     protected ?RunTaskRequest $currentTaskRequest = null;
 
+    /**
+     * Runtime constructor.
+     */
     public function __construct()
     {
         $this->registerRequestHandler(RunTaskRequest::class, $this->runTask(...));
@@ -25,11 +37,17 @@ abstract class Runtime implements RuntimeInterface
     }
 
     /**
-     * @return $this
+     * Update the runtime, e.g. by reading from the socket and handling requests
+     *
+     * @return static
      */
     abstract protected function update(): static;
 
     /**
+     * Set the runtime to ready state by sending a {@link RuntimeReadyRequest}
+     *
+     * The worker will then send the next {@link RunTaskRequest}.
+     *
      * @return void
      */
     protected function setReady(): void
@@ -38,6 +56,11 @@ abstract class Runtime implements RuntimeInterface
     }
 
     /**
+     * Run a task
+     *
+     * The task is executed in a fiber to allow usage of the {@link Promise::wait()} method.
+     * Exceptions are caught and sent back to the worker as {@link ExceptionResponse}.
+     *
      * @throws Throwable
      */
     protected function runTask(RunTaskRequest $request): ResponseInterface

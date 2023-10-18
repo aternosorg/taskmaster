@@ -2,6 +2,14 @@
 
 namespace Aternos\Taskmaster\Runtime;
 
+/**
+ * Interface AsyncRuntimeInterface
+ *
+ * An async runtime is executed in a separate process/thread and can be started.
+ * It can be used with {@link RuntimeProcess} to be executed in a separate process.
+ *
+ * @package Aternos\Taskmaster\Runtime
+ */
 interface AsyncRuntimeInterface extends RuntimeInterface
 {
     /**

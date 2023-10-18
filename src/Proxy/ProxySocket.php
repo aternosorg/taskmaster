@@ -4,10 +4,17 @@ namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\MessageInterface;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
-use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Aternos\Taskmaster\Communication\Socket\Socket;
 use Generator;
 
+/**
+ * Class ProxySocket
+ *
+ * A proxy socket connects the proxy to the proxy runtime. It sends and receives {@link ProxyMessage}s.
+ * A proxy message stores messages until they are received by a {@link ProxiedSocket}.
+ *
+ * @package Aternos\Taskmaster\Proxy
+ */
 class ProxySocket extends Socket implements ProxySocketInterface
 {
     /**
@@ -16,10 +23,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     protected array $messages = [];
 
     /**
-     * @param string|null $id
-     * @param MessageInterface|string $message
-     * @return bool
-     * @throws SocketWriteException
+     * @inheritDoc
      */
     public function sendProxyMessage(?string $id, MessageInterface|string $message): bool
     {
@@ -27,7 +31,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     }
 
     /**
-     * @return ProxyMessage[]
+     * @inheritDoc
      */
     public function getUnhandledMessages(): array
     {
@@ -35,7 +39,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     }
 
     /**
-     * @return ProxySocket
+     * @inheritDoc
      */
     public function clearUnhandledMessages(): static
     {
@@ -44,6 +48,8 @@ class ProxySocket extends Socket implements ProxySocketInterface
     }
 
     /**
+     * Read all available messages from the socket and stores them in {@link ProxySocket::$messages}
+     *
      * @return void
      * @throws SocketReadException
      */
@@ -55,9 +61,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     }
 
     /**
-     * @param string|null $id
-     * @return Generator<MessageInterface>
-     * @throws SocketReadException
+     * @inheritDoc
      */
     public function receiveProxyMessages(?string $id): Generator
     {
@@ -67,9 +71,7 @@ class ProxySocket extends Socket implements ProxySocketInterface
     }
 
     /**
-     * @param string|null $id
-     * @return Generator<string>
-     * @throws SocketReadException
+     * @inheritDoc
      */
     public function receiveRawProxyMessages(?string $id): Generator
     {
@@ -79,6 +81,8 @@ class ProxySocket extends Socket implements ProxySocketInterface
     }
 
     /**
+     * Read messages from the socket and return the messages matching $id
+     *
      * @param string|null $id
      * @return Generator<ProxyMessage>
      * @throws SocketReadException
