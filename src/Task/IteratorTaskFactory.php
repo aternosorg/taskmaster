@@ -4,6 +4,13 @@ namespace Aternos\Taskmaster\Task;
 
 use Iterator;
 
+/**
+ * Class IteratorTaskFactory
+ *
+ * A {@link TaskFactory} that creates tasks from an iterator, e.g. a {@link \DirectoryIterator}
+ *
+ * @package Aternos\Taskmaster\Task
+ */
 class IteratorTaskFactory extends TaskFactory
 {
     /**
@@ -12,14 +19,13 @@ class IteratorTaskFactory extends TaskFactory
      */
     public function __construct(
         protected Iterator $iterator,
-        protected string    $taskClass
+        protected string   $taskClass
     )
     {
     }
 
     /**
-     * @param string|null $group
-     * @return TaskInterface|null
+     * @inheritDoc
      */
     public function createNextTask(?string $group): ?TaskInterface
     {
@@ -33,6 +39,11 @@ class IteratorTaskFactory extends TaskFactory
     }
 
     /**
+     * Create a task from the iterator value
+     *
+     * This can be overwritten to create a different task from the iterator value
+     * or pass further arguments to the task constructor.
+     *
      * @param mixed $iteratorValue
      * @return TaskInterface
      */

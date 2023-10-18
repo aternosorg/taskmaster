@@ -2,6 +2,14 @@
 
 namespace Aternos\Taskmaster\Task;
 
+/**
+ * Class TaskFactory
+ *
+ * A task factory creates tasks for the {@link Taskmaster}.
+ *
+ * @see TaskFactoryInterface
+ * @package Aternos\Taskmaster\Task
+ */
 abstract class TaskFactory implements TaskFactoryInterface
 {
     /**
@@ -10,6 +18,12 @@ abstract class TaskFactory implements TaskFactoryInterface
     protected ?array $groups = null;
 
     /**
+     * Set the groups this task factory creates tasks for.
+     *
+     * Only if a task for that group is requested, the task factory will be used.
+     * If null is returned, the task factory will be used for all groups.
+     * If the returned array contains null, the task factory will be used for tasks without a group.
+     *
      * @param array|null $groups
      */
     public function setGroups(?array $groups): void
@@ -18,6 +32,11 @@ abstract class TaskFactory implements TaskFactoryInterface
     }
 
     /**
+     * Add a group this task factory creates tasks for.
+     *
+     * Only if a task for that group is requested, the task factory will be used.
+     * If you add null, the task factory will be used for tasks without a group.
+     *
      * @param string|null $group
      * @return void
      */
@@ -30,7 +49,7 @@ abstract class TaskFactory implements TaskFactoryInterface
     }
 
     /**
-     * @return null[]|string[]|null
+     * @inheritDoc
      */
     public function getGroups(): ?array
     {

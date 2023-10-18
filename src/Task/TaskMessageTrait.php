@@ -5,13 +5,20 @@ namespace Aternos\Taskmaster\Task;
 use ReflectionException;
 use ReflectionObject;
 
+/**
+ * Trait TaskMessageTrait
+ *
+ * This trait is used to implement the {@link TaskMessageInterface} interface to
+ * synchronize properties between the parent and the child process.
+ *
+ * @package Aternos\Taskmaster\Task
+ */
 trait TaskMessageTrait
 {
     protected array $synchronizedProperties = [];
 
     /**
-     * @param TaskInterface $task
-     * @return $this
+     * @inheritDoc
      */
     public function loadFromTask(TaskInterface $task): static
     {
@@ -31,8 +38,7 @@ trait TaskMessageTrait
     }
 
     /**
-     * @param TaskInterface $task
-     * @return $this
+     * @inheritDoc
      */
     public function applyToTask(TaskInterface $task): static
     {
