@@ -17,6 +17,13 @@ use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\SocketWorkerInstanceInterface;
 
+/**
+ * Class ProxyRuntime
+ *
+ * The runtime of the {@link ProcessProxy}, starting worker instances and proxying messages between them.
+ *
+ * @package Aternos\Taskmaster\Proxy
+ */
 class ProxyRuntime implements AsyncRuntimeInterface
 {
     use SocketCommunicatorTrait;
@@ -29,6 +36,11 @@ class ProxyRuntime implements AsyncRuntimeInterface
 
     protected ProxySocketInterface $proxySocket;
 
+    /**
+     * ProxyRuntime constructor.
+     *
+     * Opens a socket to php://fd/3 to communicate with the parent process
+     */
     public function __construct()
     {
         $this->proxySocket = new ProxySocket(fopen("php://fd/3", ""));
@@ -38,7 +50,13 @@ class ProxyRuntime implements AsyncRuntimeInterface
         $this->registerRequestHandler(TerminateRequest::class, $this->handleTerminate(...));
     }
 
-    public function handleWorkerStart(StartWorkerInstanceRequest $request): void
+    /**
+     * Starts a worker instance and registers it in the runtime
+     *
+     * @param StartWorkerInstanceRequest $request
+     * @return void
+     */
+    protected function handleWorkerStart(StartWorkerInstanceRequest $request): void
     {
         $worker = $request->getWorker();
         $worker->start();
@@ -46,10 +64,12 @@ class ProxyRuntime implements AsyncRuntimeInterface
     }
 
     /**
+     * Stops all worker instances, closes the proxy socket and exits the runtime
+     *
      * @param TerminateRequest $request
      * @return void
      */
-    public function handleTerminate(TerminateRequest $request): void
+    protected function handleTerminate(TerminateRequest $request): void
     {
         foreach ($this->workers as $worker) {
             $worker->stop();
@@ -58,7 +78,13 @@ class ProxyRuntime implements AsyncRuntimeInterface
         exit(0);
     }
 
-    public function handleWorkerStop(StopWorkerInstanceRequest $request): void
+    /**
+     * Stops a worker instance and unregisters it from the runtime
+     *
+     * @param StopWorkerInstanceRequest $request
+     * @return void
+     */
+    protected function handleWorkerStop(StopWorkerInstanceRequest $request): void
     {
         foreach ($this->workers as $worker) {
             if ($worker->getId() === $request->getWorkerId()) {
@@ -69,6 +95,9 @@ class ProxyRuntime implements AsyncRuntimeInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function start(): void
     {
         while (true) {
@@ -78,6 +107,11 @@ class ProxyRuntime implements AsyncRuntimeInterface
         }
     }
 
+    /**
+     * Wait for new data on any socket using {@link stream_select()}
+     *
+     * @return void
+     */
     protected function waitForNewData(): void
     {
         $streams = $this->getSelectableStreams();
@@ -89,6 +123,11 @@ class ProxyRuntime implements AsyncRuntimeInterface
 
     }
 
+    /**
+     * Get all streams that can be selected for reading in {@link stream_select()}
+     *
+     * @return resource[]
+     */
     protected function getSelectableStreams(): array
     {
         $streams = [];
@@ -113,6 +152,10 @@ class ProxyRuntime implements AsyncRuntimeInterface
     }
 
     /**
+     * Pipe messages between the proxy socket and the worker sockets
+     *
+     * Also checks if the worker sockets have died calls {@link ProxyRuntime::handleWorkerDeath()}.
+     *
      * @return void
      * @throws SocketException
      */
@@ -132,6 +175,10 @@ class ProxyRuntime implements AsyncRuntimeInterface
     }
 
     /**
+     * Send a proxy message to a worker
+     *
+     * The raw serialized message is sent to the worker socket to avoid unnecessary serialization and deserialization.
+     *
      * @param ProxyMessage $message
      * @return void
      * @throws SocketException
@@ -150,6 +197,11 @@ class ProxyRuntime implements AsyncRuntimeInterface
     }
 
     /**
+     * Receive messages from a worker and send them to the proxy socket
+     *
+     * The raw serialized message is wrapped in a {@link ProxyMessage} and sent to the proxy socket to avoid
+     * unnecessary serialization and deserialization.
+     *
      * @param ProxyableWorkerInstanceInterface $worker
      * @return void
      * @throws SocketException
@@ -166,6 +218,8 @@ class ProxyRuntime implements AsyncRuntimeInterface
     }
 
     /**
+     * Handle the death of a worker
+     *
      * @param ProxyableWorkerInstanceInterface $worker
      * @param string|null $reason
      * @return void
@@ -183,8 +237,7 @@ class ProxyRuntime implements AsyncRuntimeInterface
     }
 
     /**
-     * @param string|null $reason
-     * @return $this
+     * @inheritDoc
      */
     protected function handleFail(?string $reason = null): static
     {

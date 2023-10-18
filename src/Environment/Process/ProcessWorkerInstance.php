@@ -2,21 +2,35 @@
 
 namespace Aternos\Taskmaster\Environment\Process;
 
-use Aternos\Taskmaster\Communication\Promise\Promise;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 
+/**
+ * Class ProcessWorkerInstance
+ *
+ * The process worker instance creates a new process using {@link proc_open()}.
+ * When a process worker instance dies or is stopped, the process worker creates
+ * a new process worker instance.
+ *
+ * @package Aternos\Taskmaster\Environment\Process
+ */
 class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
 {
     protected ?RuntimeProcess $process = null;
 
+    /**
+     * @inheritDoc
+     */
     public function stop(): static
     {
         $this->process?->stop();
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function start(): static
     {
         $this->process = new RuntimeProcess($this->options, ProcessRuntime::class);
@@ -26,7 +40,7 @@ class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
     }
 
     /**
-     * @return bool
+     * @inheritDoc
      */
     public function hasDied(): bool
     {

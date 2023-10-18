@@ -10,10 +10,19 @@ use Aternos\Taskmaster\Communication\RequestHandlingTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
-use Aternos\Taskmaster\Task\Task;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
+use Throwable;
 
+/**
+ * Class ProcessProxy
+ *
+ * A {@link ProxyInterface} implementation for running a proxy in a separate process using {@link proc_open()}.
+ * No extensions are required for this proxy, and it should be available in all environments except
+ * those that explicitly block {@link proc_open()}.
+ *
+ * @package Aternos\Taskmaster\Proxy
+ */
 class ProcessProxy extends Proxy
 {
     use RequestHandlingTrait;
@@ -24,8 +33,8 @@ class ProcessProxy extends Proxy
     protected ?RuntimeProcess $process = null;
 
     /**
-     * @param ProxyableWorkerInstanceInterface $worker
-     * @return ResponsePromise
+     * @inheritDoc
+     * @throws Throwable
      */
     public function startWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
@@ -33,8 +42,8 @@ class ProcessProxy extends Proxy
     }
 
     /**
-     * @param ProxyableWorkerInstanceInterface $worker
-     * @return ResponsePromise
+     * @inheritDoc
+     * @throws Throwable
      */
     public function stopWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
@@ -42,7 +51,7 @@ class ProcessProxy extends Proxy
     }
 
     /**
-     * @return SocketInterface
+     * @inheritDoc
      */
     public function getSocket(): SocketInterface
     {
@@ -50,7 +59,7 @@ class ProcessProxy extends Proxy
     }
 
     /**
-     * @return $this
+     * @inheritDoc
      */
     public function start(): static
     {
@@ -61,13 +70,17 @@ class ProcessProxy extends Proxy
     }
 
     /**
-     * @return ProxySocketInterface
+     * @inheritDoc
      */
     public function getProxySocket(): ProxySocketInterface
     {
         return $this->proxySocket;
     }
 
+    /**
+     * @inheritDoc
+     * @throws Throwable
+     */
     public function stop(): static
     {
         $this->sendRequest(new TerminateRequest());
@@ -77,13 +90,16 @@ class ProcessProxy extends Proxy
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function handleFail(?string $reason = null): static
     {
         // TODO: handle proxy fail
     }
 
     /**
-     * @return bool
+     * @inheritDoc
      */
     public function isRunning(): bool
     {

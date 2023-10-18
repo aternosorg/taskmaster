@@ -2,14 +2,23 @@
 
 namespace Aternos\Taskmaster\Proxy;
 
-use Aternos\Taskmaster\Runtime\RuntimeProcess;
-use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
 
+/**
+ * Class Proxy
+ *
+ * Base class for proxies, a proxy can be used to start workers using a different environment, e.g.
+ * CLI as base environment.
+ *
+ * @package Aternos\Taskmaster\Proxy
+ */
 abstract class Proxy implements ProxyInterface
 {
     protected TaskmasterOptions $options;
 
+    /**
+     * @inheritDoc
+     */
     public function setOptions(TaskmasterOptions $options): static
     {
         $this->options = $options;

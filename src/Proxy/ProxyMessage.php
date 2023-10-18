@@ -4,11 +4,23 @@ namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\MessageInterface;
 
+/**
+ * Class ProxyMessage
+ *
+ * A proxy message wraps a serialized message with an id to identify the {@link ProxiedSocket} the message came from
+ * and is being sent to.
+ *
+ * @package Aternos\Taskmaster\Proxy
+ */
 class ProxyMessage implements MessageInterface
 {
     protected ?string $id = null;
     protected string $message;
 
+    /**
+     * @param string|null $id
+     * @param MessageInterface|string $message
+     */
     public function __construct(
         ?string                 $id,
         MessageInterface|string $message
@@ -19,6 +31,8 @@ class ProxyMessage implements MessageInterface
     }
 
     /**
+     * Get the id of the {@link ProxiedSocket} the message came from and is being sent to.
+     *
      * @return string|null
      */
     public function getId(): ?string
@@ -27,6 +41,8 @@ class ProxyMessage implements MessageInterface
     }
 
     /**
+     * Set the id of the {@link ProxiedSocket} the message came from and is being sent to.
+     *
      * @param string|null $id
      * @return $this
      */
@@ -37,6 +53,8 @@ class ProxyMessage implements MessageInterface
     }
 
     /**
+     * Get the wrapped unserialized message.
+     *
      * @return MessageInterface
      */
     public function getMessage(): MessageInterface
@@ -45,6 +63,8 @@ class ProxyMessage implements MessageInterface
     }
 
     /**
+     * Get the wrapped serialized message.
+     *
      * @return string
      */
     public function getMessageString(): string
@@ -53,6 +73,10 @@ class ProxyMessage implements MessageInterface
     }
 
     /**
+     * Set the wrapped message
+     *
+     * If necessary, the message will be serialized.
+     *
      * @param MessageInterface|string $message
      * @return $this
      */

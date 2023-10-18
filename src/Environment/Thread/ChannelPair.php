@@ -4,6 +4,14 @@ namespace Aternos\Taskmaster\Environment\Thread;
 
 use parallel\Channel;
 
+/**
+ * Class ChannelPair
+ *
+ * A channel pair is a pair of two {@link Channel}s, one for each direction.
+ * The channels are used to communicate between threads.
+ *
+ * @package Aternos\Taskmaster\Environment\Thread
+ */
 class ChannelPair
 {
     protected string $id;
@@ -12,6 +20,9 @@ class ChannelPair
     protected ChannelSocket $parentSocket;
     protected ChannelSocket $childSocket;
 
+    /**
+     * ChannelPair constructor.
+     */
     public function __construct()
     {
         $this->id = uniqid();
@@ -22,6 +33,8 @@ class ChannelPair
     }
 
     /**
+     * Get the {@link ChannelSocket} for the parent process
+     *
      * @return ChannelSocket
      */
     public function getParentSocket(): ChannelSocket
@@ -30,6 +43,8 @@ class ChannelPair
     }
 
     /**
+     * Get the {@link ChannelSocket} for the child thread
+     *
      * @return ChannelSocket
      */
     public function getChildSocket(): ChannelSocket

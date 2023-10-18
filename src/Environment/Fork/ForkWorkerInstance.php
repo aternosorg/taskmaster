@@ -7,10 +7,22 @@ use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 
+/**
+ * Class ForkWorkerInstance
+ *
+ * The fork worker instance forks the php process using the pcntl extension.
+ * When a fork worker instance dies or is stopped, the fork worker creates
+ * a new fork worker instance.
+ *
+ * @package Aternos\Taskmaster\Environment\Fork
+ */
 class ForkWorkerInstance extends ProxyableSocketWorkerInstance
 {
     protected ?int $pid = null;
 
+    /**
+     * @inheritDoc
+     */
     public function stop(): static
     {
         $this->socket?->close();
@@ -24,6 +36,9 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function start(): static
     {
         $socketPair = new SocketPair();
@@ -45,7 +60,7 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
     }
 
     /**
-     * @return bool
+     * @inheritDoc
      */
     public function hasDied(): bool
     {

@@ -7,10 +7,23 @@ use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use parallel\Channel;
 use parallel\Events;
 
+/**
+ * Class ChannelSocket
+ *
+ * A {@link SocketInterface} implementation using parallel {@link Channel}s. One channel is used for
+ * sending and one for receiving. The socket on the other end of the communication must use the
+ * channels in the opposite order.
+ *
+ * @package Aternos\Taskmaster\Environment\Thread
+ */
 class ChannelSocket implements SocketInterface
 {
     protected Events $events;
 
+    /**
+     * @param Channel $sender
+     * @param Channel $receiver
+     */
     public function __construct(protected Channel $sender, protected Channel $receiver)
     {
         $this->events = new Events();
@@ -18,17 +31,26 @@ class ChannelSocket implements SocketInterface
         $this->events->addChannel($this->receiver);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function sendMessage(MessageInterface $message): bool
     {
         return $this->sendRaw(serialize($message));
     }
 
+    /**
+     * @inheritDoc
+     */
     public function sendRaw(string $data): bool
     {
         $this->sender->send($data);
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function receiveMessages(): iterable
     {
         foreach ($this->receiveRaw() as $data) {
@@ -36,6 +58,9 @@ class ChannelSocket implements SocketInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function receiveRaw(): iterable
     {
         while ($event = $this->events->poll()) {
@@ -44,11 +69,9 @@ class ChannelSocket implements SocketInterface
         }
     }
 
-    public function getStream(): Channel
-    {
-        return $this->sender;
-    }
-
+    /**
+     * @inheritDoc
+     */
     public function close(): void
     {
         $this->sender->close();
@@ -56,6 +79,8 @@ class ChannelSocket implements SocketInterface
     }
 
     /**
+     * Get the receiver channel of this socket
+     *
      * @return Channel
      */
     public function getReceiver(): Channel
@@ -64,6 +89,8 @@ class ChannelSocket implements SocketInterface
     }
 
     /**
+     * Get the sender channel of this socket
+     *
      * @return Channel
      */
     public function getSender(): Channel
@@ -72,10 +99,15 @@ class ChannelSocket implements SocketInterface
     }
 
     /**
-     * @return array
+     * Get both channels of this socket as array, first sender, then receiver
+     *
+     * This can be used to pass the channels to a thread, as only the channel
+     * objects directly may be passed to a thread.
+     *
+     * @return Channel[]
      */
     public function getChannels(): array
     {
-        return [$this->sender, $this->receiver];
+        return [$this->getSender(), $this->getReceiver()];
     }
 }
