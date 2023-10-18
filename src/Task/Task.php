@@ -3,9 +3,9 @@
 namespace Aternos\Taskmaster\Task;
 
 use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
-use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Response\ErrorResponse;
+use Aternos\Taskmaster\Communication\Response\PhpError;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
@@ -25,6 +25,7 @@ abstract class Task implements TaskInterface
      * @param RuntimeInterface $runtime
      * @return $this
      */
+    #[RunOnChild]
     public function setRuntime(RuntimeInterface $runtime): static
     {
         $this->runtime = $runtime;
@@ -34,6 +35,7 @@ abstract class Task implements TaskInterface
     /**
      * @return mixed
      */
+    #[RunOnParent]
     public function getResult(): mixed
     {
         return $this->result;
@@ -42,6 +44,7 @@ abstract class Task implements TaskInterface
     /**
      * @return ErrorResponse|null
      */
+    #[RunOnParent]
     public function getError(): ?ErrorResponse
     {
         return $this->error;
@@ -51,8 +54,9 @@ abstract class Task implements TaskInterface
      * @param string|Closure $function
      * @param mixed ...$arguments
      * @return ResponseDataPromise
-     * @throws ReflectionException
+     * @throws ReflectionException|Throwable
      */
+    #[RunOnChild]
     protected function callAsync(string|Closure $function, mixed ...$arguments): ResponseDataPromise
     {
         if ($function instanceof Closure) {
@@ -77,6 +81,7 @@ abstract class Task implements TaskInterface
      * @param ResponseInterface $response
      * @return void
      */
+    #[RunOnChild]
     protected function handleTaskResponse(ResponseInterface $response): void
     {
         if (!$response instanceof TaskMessageInterface) {
@@ -92,6 +97,7 @@ abstract class Task implements TaskInterface
      * @throws ReflectionException
      * @throws Throwable
      */
+    #[RunOnChild]
     protected function call(string|Closure $function, mixed ...$arguments): mixed
     {
         return $this->callAsync($function, ...$arguments)->wait();
@@ -101,20 +107,29 @@ abstract class Task implements TaskInterface
      * @param mixed $result
      * @return void
      */
+    #[RunOnParent]
     public function handleResult(mixed $result): void
     {
         $this->result = $result;
     }
 
+    #[RunOnParent]
     public function handleError(ErrorResponse $error): void
     {
         $this->error = $error;
         fwrite(STDERR, $error->getError() . PHP_EOL);
     }
 
+    #[RunOnChild]
+    public function handleUncriticalError(PhpError $error): bool
+    {
+        return false;
+    }
+
     /**
      * @return string|null
      */
+    #[RunOnParent]
     public function getGroup(): ?string
     {
         return $this->group;
@@ -124,6 +139,7 @@ abstract class Task implements TaskInterface
      * @param string|null $group
      * @return $this
      */
+    #[RunOnParent]
     public function setGroup(?string $group): static
     {
         $this->group = $group;

@@ -2,7 +2,8 @@
 
 namespace Aternos\Taskmaster\Runtime;
 
-use Aternos\Taskmaster\Communication\Response\PhpErrorResponse;
+use Aternos\Taskmaster\Communication\Response\PhpError;
+use Aternos\Taskmaster\Communication\Response\PhpFatalErrorResponse;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\Socket;
@@ -25,7 +26,7 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
         } else {
             $this->socket = $socket;
         }
-        set_error_handler($this->handleError(...), E_ERROR | E_USER_ERROR);
+        set_error_handler($this->handleError(...), E_ALL);
         $this->setReady();
     }
 
@@ -34,14 +35,20 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
      * @param string $errstr
      * @param string $errfile
      * @param int $errline
-     * @return void
+     * @return bool
      */
-    protected function handleError(int $errno, string $errstr, string $errfile, int $errline): void
+    protected function handleError(int $errno, string $errstr, string $errfile, int $errline): bool
     {
         if (!$this->currentTaskRequest) {
-            return;
+            return false;
         }
-        $response = new PhpErrorResponse($this->currentTaskRequest->getRequestId(), $errstr, $errno, $errfile, $errline);
+        $phpError = new PhpError($errno, $errstr, $errfile, $errline);
+
+        if (!$phpError->isFatal()) {
+            return $this->currentTaskRequest->task->handleUncriticalError($phpError);
+        }
+
+        $response = new PhpFatalErrorResponse($this->currentTaskRequest->getRequestId(), $phpError);
         try {
             $this->socket->sendMessage($response);
         } catch (SocketWriteException $e) {

@@ -2,7 +2,7 @@
 
 namespace Aternos\Taskmaster\Test\Environment;
 
-use Aternos\Taskmaster\Communication\Response\PhpErrorResponse;
+use Aternos\Taskmaster\Communication\Response\PhpFatalErrorResponse;
 use Aternos\Taskmaster\Communication\Response\WorkerFailedResponse;
 use Aternos\Taskmaster\Test\Task\ErrorTask;
 use Aternos\Taskmaster\Test\Task\ExitTask;
@@ -15,8 +15,8 @@ abstract class ExitableAsyncWorkerTestCase extends AsyncWorkerTestCase
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
             $error = $task->getError();
-            $this->assertInstanceOf(PhpErrorResponse::class, $error);
-            $this->assertEquals("Test", $error->getErrorString());
+            $this->assertInstanceOf(PhpFatalErrorResponse::class, $error);
+            $this->assertEquals("Test", $error->getPhpError()->getMessage());
         }
     }
 

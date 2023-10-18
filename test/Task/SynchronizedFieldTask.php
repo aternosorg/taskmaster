@@ -46,6 +46,7 @@ class SynchronizedFieldTask extends Task
      * @param mixed $result
      * @return void
      */
+    #[RunOnParent]
     public function handleResult(mixed $result): void
     {
         $this->result = $this->counter;
