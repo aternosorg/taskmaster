@@ -14,14 +14,25 @@ use Aternos\Taskmaster\TaskmasterOptions;
  */
 abstract class Proxy implements ProxyInterface
 {
-    protected TaskmasterOptions $options;
+    protected ?TaskmasterOptions $options = null;
+    protected ProxyStatus $status = ProxyStatus::CREATED;
 
     /**
      * @inheritDoc
      */
-    public function setOptions(TaskmasterOptions $options): static
+    public function setOptionsOnce(TaskmasterOptions $options): static
     {
-        $this->options = $options;
+        if ($this->options === null) {
+            $this->options = $options;
+        }
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getStatus(): ProxyStatus
+    {
+        return $this->status;
     }
 }

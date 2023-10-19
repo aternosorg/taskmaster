@@ -9,6 +9,8 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 #[RequiresPhpExtension("pcntl")]
 class ProxiedForkWorkerTest extends ForkWorkerTest
 {
+    use ProxiedWorkerTestTrait;
+
     protected function createWorker(): WorkerInterface
     {
         return parent::createWorker()->setProxy(new ProcessProxy());

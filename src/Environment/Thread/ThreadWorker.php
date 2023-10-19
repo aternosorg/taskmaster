@@ -24,6 +24,6 @@ class ThreadWorker extends SocketWorker
 {
     public function createInstance(): WorkerInstanceInterface
     {
-        return new ThreadWorkerInstance($this->taskmaster->getOptions());
+        return new ThreadWorkerInstance($this->options);
     }
 }

@@ -25,6 +25,6 @@ class SyncWorker extends Worker
 {
     public function createInstance(): WorkerInstanceInterface
     {
-        return new SyncWorkerInstance($this->taskmaster->getOptions());
+        return new SyncWorkerInstance($this->options);
     }
 }

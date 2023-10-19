@@ -6,7 +6,6 @@ use Aternos\Taskmaster\Communication\Response\PhpError;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Task\SleepTask;
 use Aternos\Taskmaster\Test\Task\WarningTask;
-use Aternos\Taskmaster\Test\Task\UnhandledWarningTask;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 
 abstract class AsyncWorkerTestCase extends WorkerTestCase

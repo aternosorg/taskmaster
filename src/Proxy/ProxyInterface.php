@@ -18,33 +18,26 @@ use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 interface ProxyInterface
 {
     /**
-     * Set the global taskmaster options
+     * Set the global taskmaster options once
      *
-     * This is called by {@link Taskmaster::addWorker()} if the proxy isn't running yet.
-     * You can set different options, e.g. a different PHP binary and then start your proxy
-     * before passing it through the worker to {@link Taskmaster::addWorker()}.
+     * If the options are already set, they will not be overwritten.
+     *
+     * This is called by {@link Taskmaster::addWorker()}.
+     * You can set different options, e.g. a different PHP binary, call this before passing it through the worker
+     * to {@link Taskmaster::addWorker()}.
      *
      * @param TaskmasterOptions $options
      * @return $this
      */
-    public function setOptions(TaskmasterOptions $options): static;
+    public function setOptionsOnce(TaskmasterOptions $options): static;
 
     /**
-     * Check if the proxy is running
+     * Get the current proxy status
      *
-     * The proxy will be started using {@link ProxyInterface::start()} if it's passed to the {@link Taskmaster}
-     * and is not running yet.
-     *
-     * @return bool
+     * @return ProxyStatus
+     * @see ProxyStatus
      */
-    public function isRunning(): bool;
-
-    /**
-     * Start the proxy
-     *
-     * @return $this
-     */
-    public function start(): static;
+    public function getStatus(): ProxyStatus;
 
     /**
      * Stop the proxy

@@ -44,7 +44,7 @@ abstract class SocketWorkerInstance extends WorkerInstance implements SocketWork
     /**
      * @inheritDoc
      */
-    protected function handleFail(?string $reason = null): static
+    public function handleFail(?string $reason = null): static
     {
         if ($this->status === WorkerInstanceStatus::FAILED) {
             return $this;

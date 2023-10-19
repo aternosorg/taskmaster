@@ -7,6 +7,7 @@ use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
+use Throwable;
 
 /**
  * Interface WorkerInstanceInterface
@@ -85,4 +86,15 @@ interface WorkerInstanceInterface extends CommunicatorInterface
      * @return $this
      */
     public function stop(): static;
+
+    /**
+     * Handle a fail of the worker instance
+     *
+     * If necessary, it resolves the current task response promise with a {@link WorkerFailedResponse}.
+     *
+     * @param string|null $reason
+     * @return $this
+     * @throws Throwable
+     */
+    public function handleFail(?string $reason = null): static;
 }

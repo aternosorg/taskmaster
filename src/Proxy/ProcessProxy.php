@@ -38,6 +38,9 @@ class ProcessProxy extends Proxy
      */
     public function startWorkerInstance(ProxyableWorkerInstanceInterface $worker): ResponsePromise
     {
+        if ($this->status === ProxyStatus::CREATED || $this->status === ProxyStatus::FAILED || $this->status === ProxyStatus::STOPPED) {
+            $this->start();
+        }
         return $this->sendRequest(new StartWorkerInstanceRequest($worker));
     }
 
@@ -59,20 +62,24 @@ class ProcessProxy extends Proxy
     }
 
     /**
-     * @inheritDoc
+     * Start the proxy
+     *
+     * @return $this
      */
-    public function start(): static
+    protected function start(): static
     {
+        $this->status = ProxyStatus::STARTING;
         $this->process = new RuntimeProcess($this->options, ProxyRuntime::class);
         $this->proxySocket = new ProxySocket($this->process->getSocket());
         $this->socket = new ProxiedSocket($this->proxySocket, null);
+        $this->status = ProxyStatus::RUNNING;
         return $this;
     }
 
     /**
      * @inheritDoc
      */
-    public function getProxySocket(): ProxySocketInterface
+    public function getProxySocket(): ?ProxySocketInterface
     {
         return $this->proxySocket;
     }
@@ -87,6 +94,7 @@ class ProcessProxy extends Proxy
         while ($this->process->isRunning()) {
             usleep(Taskmaster::SOCKET_WAIT_TIME);
         }
+        $this->status = ProxyStatus::STOPPED;
         return $this;
     }
 
@@ -95,14 +103,7 @@ class ProcessProxy extends Proxy
      */
     protected function handleFail(?string $reason = null): static
     {
-        // TODO: handle proxy fail
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function isRunning(): bool
-    {
-        return $this->process?->isRunning() === true;
+        $this->status = ProxyStatus::FAILED;
+        return $this;
     }
 }

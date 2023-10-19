@@ -21,6 +21,6 @@ class ProcessWorker extends SocketWorker
      */
     public function createInstance(): ProcessWorkerInstance
     {
-        return new ProcessWorkerInstance($this->taskmaster->getOptions());
+        return new ProcessWorkerInstance($this->options);
     }
 }

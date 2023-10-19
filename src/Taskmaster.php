@@ -9,6 +9,7 @@ use Aternos\Taskmaster\Environment\Process\ProcessWorker;
 use Aternos\Taskmaster\Environment\Sync\SyncWorker;
 use Aternos\Taskmaster\Proxy\ProcessProxy;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
+use Aternos\Taskmaster\Proxy\ProxyStatus;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Worker\SocketWorkerInterface;
@@ -319,7 +320,7 @@ class Taskmaster
     /**
      * Add a worker
      *
-     * If the worker has a proxy, the proxy will be started if it's not running yet and added to the proxy list.
+     * If the worker has a proxy, the proxy will be added to the proxy list.
      * The worker also gets this taskmaster instance assigned.
      *
      * @param WorkerInterface $worker
@@ -329,14 +330,13 @@ class Taskmaster
     {
         $proxy = $worker->getProxy();
         if ($proxy && !in_array($proxy, $this->proxies, true)) {
-            if (!$proxy->isRunning()) {
-                $proxy->setOptions($this->options);
-                $proxy->start();
+            if ($proxy->getStatus() !== ProxyStatus::STARTING && $proxy->getStatus() !== ProxyStatus::RUNNING) {
+                $proxy->setOptionsOnce($this->options);
             }
             $this->proxies[] = $proxy;
         }
 
-        $worker->setTaskmaster($this);
+        $worker->setOptionsOnce($this->options);
         $this->workers[] = $worker;
         return $this;
     }
@@ -462,5 +462,25 @@ class Taskmaster
     public function getTasks(): array
     {
         return $this->tasks;
+    }
+
+    /**
+     * Get all currently registered proxies
+     *
+     * @return ProxyInterface[]
+     */
+    public function getProxies(): array
+    {
+        return $this->proxies;
+    }
+
+    /**
+     * Get all currently registered workers
+     *
+     * @return WorkerInterface[]
+     */
+    public function getWorkers(): array
+    {
+        return $this->workers;
     }
 }

@@ -6,6 +6,7 @@ use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\TaskmasterOptions;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 
 /**
@@ -40,14 +41,16 @@ interface WorkerInterface
     public function getProxy(): ?ProxyInterface;
 
     /**
-     * Set the taskmaster instance
+     * Set the taskmaster options once
      *
-     * The taskmaster will automatically set itself when adding the worker.
+     * If the options are already set, they will not be overwritten.
+     * This is called by {@link Taskmaster::addWorker()}.
+     * If you want to set different options, e.g. a different PHP binary, call this before adding the worker.
      *
-     * @param Taskmaster $taskmaster
+     * @param TaskmasterOptions $options
      * @return $this
      */
-    public function setTaskmaster(Taskmaster $taskmaster): static;
+    public function setOptionsOnce(TaskmasterOptions $options): static;
 
     /**
      * Update the worker and its instance

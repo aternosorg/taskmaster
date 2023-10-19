@@ -9,6 +9,8 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 #[RequiresPhpExtension("parallel")]
 class ProxiedThreadWorkerTest extends ThreadWorkerTest
 {
+    use ProxiedWorkerTestTrait;
+
     protected function createWorker(): WorkerInterface
     {
         return parent::createWorker()->setProxy(new ProcessProxy());

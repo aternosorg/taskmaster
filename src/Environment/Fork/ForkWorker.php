@@ -23,6 +23,6 @@ class ForkWorker extends SocketWorker
      */
     public function createInstance(): WorkerInstanceInterface
     {
-        return new ForkWorkerInstance($this->taskmaster->getOptions());
+        return new ForkWorkerInstance($this->options);
     }
 }

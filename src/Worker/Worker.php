@@ -4,11 +4,14 @@ namespace Aternos\Taskmaster\Worker;
 
 use Aternos\Taskmaster\Proxy\ProxiedSocket;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
+use Aternos\Taskmaster\Proxy\ProxyStatus;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\TaskmasterOptions;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
+use Throwable;
 
 /**
  * Class Worker
@@ -23,7 +26,7 @@ use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
 abstract class Worker implements WorkerInterface
 {
     protected WorkerStatus $status = WorkerStatus::AVAILABLE;
-    protected Taskmaster $taskmaster;
+    protected ?TaskmasterOptions $options = null;
     protected ?WorkerInstanceInterface $instance = null;
     protected ?string $group = null;
     protected ?ProxyInterface $proxy = null;
@@ -33,9 +36,11 @@ abstract class Worker implements WorkerInterface
     /**
      * @inheritDoc
      */
-    public function setTaskmaster(Taskmaster $taskmaster): static
+    public function setOptionsOnce(TaskmasterOptions $options): static
     {
-        $this->taskmaster = $taskmaster;
+        if ($this->options === null) {
+            $this->options = $options;
+        }
         return $this;
     }
 
@@ -81,11 +86,9 @@ abstract class Worker implements WorkerInterface
             throw new \RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
         }
 
-        $socket = new ProxiedSocket($this->proxy->getProxySocket(), $instance->getId());
-
         $this->proxy->startWorkerInstance($instance)
-            ->then(function () use ($instance, $socket) {
-                $instance->setSocket($socket);
+            ->then(function () use ($instance) {
+                $instance->setSocket(new ProxiedSocket($this->proxy->getProxySocket(), $instance->getId()));
                 $instance->init();
                 $instance->setStatus(WorkerInstanceStatus::STARTING);
             });
@@ -93,6 +96,7 @@ abstract class Worker implements WorkerInterface
 
     /**
      * @inheritDoc
+     * @throws Throwable
      */
     public function update(): static
     {
@@ -108,6 +112,10 @@ abstract class Worker implements WorkerInterface
             } else {
                 $this->status = WorkerStatus::AVAILABLE;
             }
+        }
+        if ($this->proxy?->getStatus() === ProxyStatus::FAILED) {
+            $this->instance->handleFail("Proxy failed.");
+            $this->instance = null;
         }
         return $this;
     }

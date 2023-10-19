@@ -151,7 +151,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      * @return $this
      * @throws Throwable
      */
-    protected function handleFail(?string $reason = null): static
+    public function handleFail(?string $reason = null): static
     {
         $this->status = WorkerInstanceStatus::FAILED;
         $this->currentResponsePromise?->resolve(new WorkerFailedResponse($reason));

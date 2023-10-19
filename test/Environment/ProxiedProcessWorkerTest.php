@@ -7,6 +7,8 @@ use Aternos\Taskmaster\Worker\WorkerInterface;
 
 class ProxiedProcessWorkerTest extends ProcessWorkerTest
 {
+    use ProxiedWorkerTestTrait;
+
     protected function createWorker(): WorkerInterface
     {
         return parent::createWorker()->setProxy(new ProcessProxy());
