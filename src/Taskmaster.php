@@ -7,6 +7,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Environment\Fork\ForkWorker;
 use Aternos\Taskmaster\Environment\Process\ProcessWorker;
 use Aternos\Taskmaster\Environment\Sync\SyncWorker;
+use Aternos\Taskmaster\Environment\Thread\ThreadWorker;
 use Aternos\Taskmaster\Proxy\ProcessProxy;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Proxy\ProxyStatus;
@@ -363,21 +364,68 @@ class Taskmaster
     /**
      * Automatically detect extensions and add workers accordingly
      *
-     * Currently only pcntl is detected and used to add fork workers with process workers as fallback.
+     * Can also load the worker configuration from environment variables unless disabled with $loadFromEnv.
+     * Supported environment variables:
+     *   * TASKMASTER_WORKER_COUNT: number of workers, can be disabled with $allowCountOverride
+     *   * TASKMASTER_WORKER: worker type, can be "fork", "process", "thread" or "sync"
+     *   * TASKMASTER_WORKER_PROXY: proxy type, can be "process"
+     *   * TASKMASTER_WORKER_BIN: path to the php executable for the worker (only useful for process workers)
+     *   * TASKMASTER_WORKER_PROXY_BIN: path to the php executable for the proxy (only useful for process proxies)
      *
      * @param int $count
+     * @param bool $loadFromEnv
+     * @param bool $allowCountOverride
      * @return $this
      */
-    public function autoDetectWorkers(int $count): static
+    public function autoDetectWorkers(int $count, bool $loadFromEnv = true, bool $allowCountOverride = true): static
     {
-        if (extension_loaded("pcntl")) {
-            return $this->addWorkers(new ForkWorker(), $count);
+        $countEnv = getenv("TASKMASTER_WORKER_COUNT");
+        if ($loadFromEnv && $allowCountOverride && is_numeric($countEnv)) {
+            $count = (int)$countEnv;
         }
-        if (getenv("TASKMASTER_PROXY_FORK")) {
+
+        $proxy = null;
+        $proxyEnv = getenv("TASKMASTER_WORKER_PROXY");
+        if ($loadFromEnv && strtolower($proxyEnv) === "process") {
             $proxy = new ProcessProxy();
-            return $this->addWorkers((new ForkWorker())->setProxy($proxy), $count);
+
+            if ($proxyBin = getenv("TASKMASTER_WORKER_PROXY_BIN")) {
+                $proxyOptions = clone $this->options;
+                $proxyOptions->setPhpExecutable($proxyBin);
+                $proxy->setOptionsOnce($proxyOptions);
+            }
         }
-        return $this->addWorkers(new ProcessWorker(), $count);
+
+        $worker = null;
+        $workerEnv = getenv("TASKMASTER_WORKER");
+        if ($loadFromEnv && $workerEnv) {
+            $worker = match (strtolower($workerEnv)) {
+                "fork" => new ForkWorker(),
+                "process" => new ProcessWorker(),
+                "thread" => new ThreadWorker(),
+                "sync" => new SyncWorker(),
+                default => null
+            };
+        }
+
+        if (!$worker) {
+            if (extension_loaded("pcntl")) {
+                $worker = new ForkWorker();
+            } else {
+                $worker = new ProcessWorker();
+            }
+        }
+
+        if ($proxy) {
+            $worker->setProxy($proxy);
+        }
+
+        if ($workerBin = getenv("TASKMASTER_WORKER_BIN")) {
+            $workerOptions = clone $this->options;
+            $workerOptions->setPhpExecutable($workerBin);
+            $worker->setOptionsOnce($workerOptions);
+        }
+        return $this->addWorkers($worker, $count);
     }
 
     /**
