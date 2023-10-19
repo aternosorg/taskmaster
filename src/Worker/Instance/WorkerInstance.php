@@ -12,12 +12,23 @@ use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\Response\TaskResponse;
 use Aternos\Taskmaster\Communication\Response\WorkerFailedResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
+use Aternos\Taskmaster\Task\Synchronized;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Task\TaskMessageInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 use Throwable;
 
+/**
+ * Class WorkerInstance
+ *
+ * Basic worker instance implementation.
+ * A worker instance represents a single worker, e.g. a process or thread and is
+ * wrapped by a worker which always holds one or no instance.
+ * When a worker instance dies or is stopped, the worker creates a new worker instance.
+ *
+ * @see WorkerInstanceInterface
+ * @package Aternos\Taskmaster\Worker\Instance
+ */
 abstract class WorkerInstance implements WorkerInstanceInterface
 {
     use RequestHandlingTrait;
@@ -26,10 +37,16 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     protected ?TaskInterface $currentTask = null;
     protected ?ResponsePromise $currentResponsePromise = null;
 
+    /**
+     * @param TaskmasterOptions $options
+     */
     public function __construct(protected TaskmasterOptions $options)
     {
     }
 
+    /**
+     * @inheritDoc
+     */
     public function init(): static
     {
         $this->registerRequestHandler(ExecuteFunctionRequest::class, $this->handleExecuteFunctionRequest(...));
@@ -38,6 +55,8 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     }
 
     /**
+     * Handle a {@link RuntimeReadyRequest} to set the worker instance status to {@link WorkerInstanceStatus::IDLE}.
+     *
      * @param RuntimeReadyRequest $request
      * @return void
      */
@@ -47,6 +66,12 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     }
 
     /**
+     * Handle an {@link ExecuteFunctionRequest} to execute a function on the current task.
+     *
+     * Applies {@link Synchronized} fields to the task before executing the function and adds them
+     * back to the response after execution.
+     * Also catches exceptions and returns an {@link ExceptionResponse} to the child instead.
+     *
      * @param ExecuteFunctionRequest $request
      * @return ResponseInterface
      */
@@ -64,8 +89,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     }
 
     /**
-     * @param TaskInterface $task
-     * @return ResponsePromise
+     * @inheritDoc
      */
     public function runTask(TaskInterface $task): ResponsePromise
     {
@@ -75,6 +99,11 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     }
 
     /**
+     * Send a {@link RunTaskRequest} to the worker instance
+     *
+     * Returns a {@link ResponsePromise} which can be resolved asynchronously.
+     * Gets {@link Synchronized} fields from the task response and applies them to the task.
+     *
      * @param RunTaskRequest $request
      * @return ResponsePromise
      */
@@ -105,14 +134,19 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     }
 
     /**
-     * @return WorkerInstanceStatus
+     * @inheritDoc
      */
     public function getStatus(): WorkerInstanceStatus
     {
         return $this->status;
     }
 
+
     /**
+     * Handle a fail of the worker instance
+     *
+     * If necessary, it resolves the current task response promise with a {@link WorkerFailedResponse}.
+     *
      * @param string|null $reason
      * @return $this
      * @throws Throwable

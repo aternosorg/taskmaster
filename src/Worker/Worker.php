@@ -8,7 +8,18 @@ use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
 
+/**
+ * Class Worker
+ *
+ * A worker runs tasks in a {@link RuntimeInterface}.
+ * It starts a {@link WorkerInstanceInterface} when necessary and assigns tasks to it.
+ * When the worker instance dies, the worker will start a new one.
+ * The worker can use a {@link ProxyInterface} to run the worker instance.
+ *
+ * @package Aternos\Taskmaster\Worker
+ */
 abstract class Worker implements WorkerInterface
 {
     protected WorkerStatus $status = WorkerStatus::AVAILABLE;
@@ -20,8 +31,7 @@ abstract class Worker implements WorkerInterface
     protected ?TaskInterface $queuedTask = null;
 
     /**
-     * @param Taskmaster $taskmaster
-     * @return $this
+     * @inheritDoc
      */
     public function setTaskmaster(Taskmaster $taskmaster): static
     {
@@ -30,9 +40,14 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
+     * Get the current instance or create a new one if necessary
+     *
+     * The instance is only started if there is a queued task.
+     * If the current instance failed, a new one will be created as well.
+     *
      * @return WorkerInstanceInterface
      */
-    public function getInstance(): WorkerInstanceInterface
+    protected function getInstance(): WorkerInstanceInterface
     {
         if ($this->instance === null || $this->instance->getStatus() === WorkerInstanceStatus::FAILED) {
             $this->instanceStarted = false;
@@ -47,6 +62,10 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
+     * Start the worker instance
+     *
+     * If a proxy is set, the worker instance will be started on the proxy.
+     *
      * @return void
      */
     protected function startInstance(): void
@@ -73,7 +92,7 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
-     * @return $this
+     * @inheritDoc
      */
     public function update(): static
     {
@@ -94,7 +113,7 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
-     * @return $this
+     * @inheritDoc
      */
     public function stop(): static
     {
@@ -113,7 +132,7 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
-     * @return WorkerStatus
+     * @inheritDoc
      */
     public function getStatus(): WorkerStatus
     {
@@ -121,8 +140,7 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
-     * @param TaskInterface $task
-     * @return $this
+     * @inheritDoc
      */
     public function assignTask(TaskInterface $task): static
     {
@@ -140,7 +158,7 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
-     * @return ProxyInterface|null
+     * @inheritDoc
      */
     public function getProxy(): ?ProxyInterface
     {
@@ -148,7 +166,7 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
-     * @return string|null
+     * @inheritDoc
      */
     public function getGroup(): ?string
     {
@@ -156,6 +174,11 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
+     * Set the worker group
+     *
+     * The worker group can be used to assign tasks to specific workers
+     * by setting the same group on the worker and the task.
+     *
      * @param string|null $group
      * @return $this
      */
@@ -166,6 +189,11 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
+     * Set the proxy
+     *
+     * The taskmaster will get the proxy, start and update it when necessary.
+     *
+     *
      * @param ProxyInterface|null $proxy
      * @return $this
      */
@@ -176,6 +204,8 @@ abstract class Worker implements WorkerInterface
     }
 
     /**
+     * Remove the current instance when cloning the worker
+     *
      * @return void
      */
     public function __clone(): void
@@ -183,5 +213,10 @@ abstract class Worker implements WorkerInterface
         $this->instance = null;
     }
 
+    /**
+     * Create a new worker instance
+     *
+     * @return WorkerInstanceInterface
+     */
     abstract protected function createInstance(): WorkerInstanceInterface;
 }

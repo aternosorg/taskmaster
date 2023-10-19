@@ -5,7 +5,7 @@ namespace Aternos\Taskmaster\Environment\Fork;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
 
 /**
  * Class ForkWorkerInstance
@@ -25,6 +25,9 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
      */
     public function stop(): static
     {
+        if ($this->status !== WorkerInstanceStatus::FAILED) {
+            $this->status = WorkerInstanceStatus::FINISHED;
+        }
         $this->socket?->close();
         if ($this->pid) {
             posix_kill($this->pid, SIGTERM);

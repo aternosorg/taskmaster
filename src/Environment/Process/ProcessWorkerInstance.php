@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Environment\Process;
 
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
 
 /**
  * Class ProcessWorkerInstance
@@ -24,6 +24,9 @@ class ProcessWorkerInstance extends ProxyableSocketWorkerInstance
      */
     public function stop(): static
     {
+        if ($this->status !== WorkerInstanceStatus::FAILED) {
+            $this->status = WorkerInstanceStatus::FINISHED;
+        }
         $this->process?->stop();
         return $this;
     }

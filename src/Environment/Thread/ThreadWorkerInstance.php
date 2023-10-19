@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Environment\Thread;
 
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
 use parallel\Channel;
 use parallel\Future;
 use parallel\Runtime;
@@ -50,6 +50,9 @@ class ThreadWorkerInstance extends ProxyableSocketWorkerInstance
      */
     public function stop(): static
     {
+        if ($this->status !== WorkerInstanceStatus::FAILED) {
+            $this->status = WorkerInstanceStatus::FINISHED;
+        }
         if ($this->hasDied()) {
             return $this;
         }

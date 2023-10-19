@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Communication\Request;
 
 use Aternos\Taskmaster\Communication\Request;
 use Aternos\Taskmaster\Task\Task;
+use Aternos\Taskmaster\Task\TaskInterface;
 
 /**
  * Class RunTaskRequest
@@ -17,7 +18,7 @@ class RunTaskRequest extends Request
     /**
      * @param Task $task
      */
-    public function __construct(public Task $task)
+    public function __construct(public TaskInterface $task)
     {
         parent::__construct();
     }

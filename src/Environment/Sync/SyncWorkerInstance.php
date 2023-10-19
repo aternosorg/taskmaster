@@ -6,7 +6,7 @@ use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Communication\RequestInterface;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstance;
-use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
+use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
 use Throwable;
 
 /**
@@ -48,6 +48,9 @@ class SyncWorkerInstance extends WorkerInstance
      */
     public function stop(): static
     {
+        if ($this->status !== WorkerInstanceStatus::FAILED) {
+            $this->status = WorkerInstanceStatus::FINISHED;
+        }
         return $this;
     }
 

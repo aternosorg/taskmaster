@@ -7,7 +7,6 @@ use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
-use Aternos\Taskmaster\Worker\WorkerInstanceStatus;
 
 /**
  * Interface WorkerInstanceInterface
