@@ -7,6 +7,8 @@ use Closure;
 use Exception;
 use Fiber;
 use ReflectionException;
+use ReflectionFunction;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -145,7 +147,7 @@ class Promise
      */
     protected function matchesFirstArgument(Closure $callback, Exception $exception): bool
     {
-        $reflection = new \ReflectionFunction($callback);
+        $reflection = new ReflectionFunction($callback);
         $parameters = $reflection->getParameters();
         if (count($parameters) === 0) {
             return true;
@@ -175,7 +177,7 @@ class Promise
             throw $this->exception;
         }
         if (!Fiber::getCurrent()) {
-            throw new \RuntimeException("Promise::wait() can only be called from within a fiber");
+            throw new RuntimeException("Promise::wait() can only be called from within a fiber");
         }
         $this->fibers[] = Fiber::getCurrent();
         return Fiber::suspend();

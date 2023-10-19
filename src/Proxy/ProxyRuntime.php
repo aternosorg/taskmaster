@@ -66,10 +66,9 @@ class ProxyRuntime implements AsyncRuntimeInterface
     /**
      * Stops all worker instances, closes the proxy socket and exits the runtime
      *
-     * @param TerminateRequest $request
      * @return void
      */
-    protected function handleTerminate(TerminateRequest $request): void
+    protected function handleTerminate(): void
     {
         foreach ($this->workers as $worker) {
             $worker->stop();

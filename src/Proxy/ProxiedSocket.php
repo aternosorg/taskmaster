@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Proxy;
 
 use Aternos\Taskmaster\Communication\MessageInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
+use BadMethodCallException;
 
 /**
  * Class ProxiedSocket
@@ -59,6 +60,6 @@ class ProxiedSocket implements SocketInterface
      */
     public function receiveRaw(): iterable
     {
-        throw new \BadMethodCallException("Receiving raw data is not supported for proxied sockets.");
+        throw new BadMethodCallException("Receiving raw data is not supported for proxied sockets.");
     }
 }

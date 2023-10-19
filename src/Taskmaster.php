@@ -286,6 +286,7 @@ class Taskmaster
      *
      * @param SocketInterface|null $socket
      * @return resource|null
+     * @noinspection PhpMixedReturnTypeCanBeReducedInspection
      */
     protected function getSelectableReadStreamFromSocket(?SocketInterface $socket): mixed
     {

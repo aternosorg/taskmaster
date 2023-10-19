@@ -2,6 +2,8 @@
 
 namespace Aternos\Taskmaster\Communication\Socket\Exception;
 
+use Exception;
+
 /**
  * Class SocketException
  *
@@ -9,7 +11,7 @@ namespace Aternos\Taskmaster\Communication\Socket\Exception;
  *
  * @package Aternos\Taskmaster\Communication\Socket\Exception
  */
-class SocketException extends \Exception
+class SocketException extends Exception
 {
 
 }

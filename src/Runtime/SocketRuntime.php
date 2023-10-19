@@ -50,6 +50,7 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
      * @param string $errfile
      * @param int $errline
      * @return bool
+     * @noinspection SpellCheckingInspection
      */
     protected function handleError(int $errno, string $errstr, string $errfile, int $errline): bool
     {

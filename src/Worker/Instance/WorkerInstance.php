@@ -16,6 +16,7 @@ use Aternos\Taskmaster\Task\Synchronized;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Task\TaskMessageInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
+use Exception;
 use Throwable;
 
 /**
@@ -57,10 +58,9 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     /**
      * Handle a {@link RuntimeReadyRequest} to set the worker instance status to {@link WorkerInstanceStatus::IDLE}.
      *
-     * @param RuntimeReadyRequest $request
      * @return void
      */
-    protected function handleRuntimeReadyRequest(RuntimeReadyRequest $request): void
+    protected function handleRuntimeReadyRequest(): void
     {
         $this->status = WorkerInstanceStatus::IDLE;
     }
@@ -83,7 +83,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             $request->applyToTask($this->currentTask);
             $result = $this->currentTask->$function(...$arguments);
             return (new TaskResponse($request->getRequestId(), $result))->loadFromTask($this->currentTask);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return (new ExceptionResponse($request->getRequestId(), $exception))->loadFromTask($this->currentTask);
         }
     }
@@ -122,7 +122,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             }
             $this->currentTask = null;
             $this->currentResponsePromise = null;
-        })->catch(function (\Exception $exception, ResponseInterface $response) {
+        })->catch(function (Exception $exception, ResponseInterface $response) {
             if ($response instanceof TaskMessageInterface) {
                 $response->applyToTask($this->currentTask);
             }

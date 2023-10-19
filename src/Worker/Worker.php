@@ -6,11 +6,11 @@ use Aternos\Taskmaster\Proxy\ProxiedSocket;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Proxy\ProxyStatus;
 use Aternos\Taskmaster\Task\TaskInterface;
-use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -83,7 +83,7 @@ abstract class Worker implements WorkerInterface
         }
 
         if (!$instance instanceof ProxyableWorkerInstanceInterface) {
-            throw new \RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
+            throw new RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
         }
 
         $this->proxy->startWorkerInstance($instance)
@@ -133,7 +133,7 @@ abstract class Worker implements WorkerInterface
             return $this;
         }
         if (!$instance instanceof ProxyableWorkerInstanceInterface) {
-            throw new \RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
+            throw new RuntimeException("Worker instance must implement ProxyableWorkerInstanceInterface to be used with a proxy.");
         }
         $this->proxy->stopWorkerInstance($instance);
         return $this;

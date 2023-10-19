@@ -17,11 +17,11 @@ use Generator;
 class Socket implements SocketInterface, SelectableSocketInterface
 {
     /**
-     * @param resource $socket
+     * @param resource|Socket $socket
      */
     public function __construct(protected mixed $socket)
     {
-        if ($this->socket instanceof SocketInterface) {
+        if ($this->socket instanceof Socket) {
             $this->socket = $this->socket->getStream();
         }
         stream_set_blocking($this->socket, false);

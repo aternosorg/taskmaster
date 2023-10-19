@@ -53,7 +53,7 @@ abstract class SocketWorkerInstance extends WorkerInstance implements SocketWork
         try {
             // try to read any last messages
             $this->update();
-        } catch (SocketException $e) {
+        } catch (SocketException) {
         }
         return parent::handleFail($reason);
     }

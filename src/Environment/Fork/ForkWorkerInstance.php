@@ -6,6 +6,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableSocketWorkerInstance;
 use Aternos\Taskmaster\Worker\Instance\WorkerInstanceStatus;
+use RuntimeException;
 
 /**
  * Class ForkWorkerInstance
@@ -47,7 +48,7 @@ class ForkWorkerInstance extends ProxyableSocketWorkerInstance
         $socketPair = new SocketPair();
         $pid = pcntl_fork();
         if ($pid === -1) {
-            throw new \RuntimeException("Could not fork");
+            throw new RuntimeException("Could not fork");
         }
         if ($pid === 0) {
             $socketPair->closeParentSocket();

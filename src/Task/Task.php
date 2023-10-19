@@ -9,6 +9,7 @@ use Aternos\Taskmaster\Communication\Response\PhpError;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
+use Exception;
 use InvalidArgumentException;
 use ReflectionException;
 use ReflectionFunction;
@@ -110,7 +111,7 @@ abstract class Task implements TaskInterface
         $request = (new ExecuteFunctionRequest($function, $arguments))->loadFromTask($this);
         $responsePromise = $this->runtime->sendRequest($request)
             ->then($this->handleTaskResponse(...))
-            ->catch(fn(\Exception $e, ResponseInterface $response) => $this->handleTaskResponse($response));
+            ->catch(fn(Exception $e, ResponseInterface $response) => $this->handleTaskResponse($response));
         return new ResponseDataPromise($responsePromise);
     }
 

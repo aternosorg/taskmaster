@@ -2,6 +2,8 @@
 
 namespace Aternos\Taskmaster;
 
+use RuntimeException;
+
 /**
  * Class TaskmasterOptions
  *
@@ -41,7 +43,7 @@ class TaskmasterOptions
             $this->bootstrap = $this->autoDetectBootstrap();
         }
         if ($this->bootstrap === null) {
-            throw new \RuntimeException("Could not find bootstrap file.");
+            throw new RuntimeException("Could not find bootstrap file.");
         }
         return $this->bootstrap;
     }

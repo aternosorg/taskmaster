@@ -4,7 +4,6 @@ namespace Aternos\Taskmaster\Communication\Promise;
 
 use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
-use Throwable;
 
 /**
  * Class ResponsePromise
