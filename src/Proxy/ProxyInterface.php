@@ -18,7 +18,17 @@ use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 interface ProxyInterface
 {
     /**
-     * Set the global taskmaster options once
+     * Set the global taskmaster options
+     *
+     * If the options are not set, the taskmaster will set the default options.
+     *
+     * @param TaskmasterOptions $options
+     * @return $this
+     */
+    public function setOptions(TaskmasterOptions $options): static;
+
+    /**
+     * Set the global taskmaster options if necessary
      *
      * If the options are already set, they will not be overwritten.
      *
@@ -29,7 +39,7 @@ interface ProxyInterface
      * @param TaskmasterOptions $options
      * @return $this
      */
-    public function setOptionsOnce(TaskmasterOptions $options): static;
+    public function setOptionsIfNecessary(TaskmasterOptions $options): static;
 
     /**
      * Get the current proxy status

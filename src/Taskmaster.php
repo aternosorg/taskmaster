@@ -333,12 +333,12 @@ class Taskmaster
         $proxy = $worker->getProxy();
         if ($proxy && !in_array($proxy, $this->proxies, true)) {
             if ($proxy->getStatus() !== ProxyStatus::STARTING && $proxy->getStatus() !== ProxyStatus::RUNNING) {
-                $proxy->setOptionsOnce($this->options);
+                $proxy->setOptionsIfNecessary($this->options);
             }
             $this->proxies[] = $proxy;
         }
 
-        $worker->setOptionsOnce($this->options);
+        $worker->setOptionsIfNecessary($this->options);
         $this->workers[] = $worker;
         return $this;
     }
@@ -392,7 +392,7 @@ class Taskmaster
             if ($proxyBin = getenv("TASKMASTER_WORKER_PROXY_BIN")) {
                 $proxyOptions = clone $this->options;
                 $proxyOptions->setPhpExecutable($proxyBin);
-                $proxy->setOptionsOnce($proxyOptions);
+                $proxy->setOptionsIfNecessary($proxyOptions);
             }
         }
 
@@ -411,8 +411,10 @@ class Taskmaster
         if (!$worker) {
             if (extension_loaded("pcntl")) {
                 $worker = new ForkWorker();
-            } else {
+            } elseif (function_exists("proc_open")) {
                 $worker = new ProcessWorker();
+            } else {
+                $worker = new SyncWorker();
             }
         }
 
@@ -423,7 +425,7 @@ class Taskmaster
         if ($workerBin = getenv("TASKMASTER_WORKER_BIN")) {
             $workerOptions = clone $this->options;
             $workerOptions->setPhpExecutable($workerBin);
-            $worker->setOptionsOnce($workerOptions);
+            $worker->setOptionsIfNecessary($workerOptions);
         }
         return $this->addWorkers($worker, $count);
     }

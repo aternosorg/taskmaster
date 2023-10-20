@@ -20,10 +20,19 @@ abstract class Proxy implements ProxyInterface
     /**
      * @inheritDoc
      */
-    public function setOptionsOnce(TaskmasterOptions $options): static
+    public function setOptions(TaskmasterOptions $options): static
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setOptionsIfNecessary(TaskmasterOptions $options): static
     {
         if ($this->options === null) {
-            $this->options = $options;
+            $this->setOptions($options);
         }
         return $this;
     }
