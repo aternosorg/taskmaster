@@ -1,7 +1,14 @@
 {
     "name": "aternos/taskmaster",
-    "description": "Run tasks in parallel",
+    "description": "Object-oriented PHP library for running tasks in parallel",
     "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Matthias Neid",
+            "email": "matthias@aternos.org"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Aternos\\Taskmaster\\": "src/"
@@ -12,17 +19,14 @@
             "Aternos\\Taskmaster\\Test\\": "test/"
         }
     },
-    "authors": [
-        {
-            "name": "Matthias Neid",
-            "email": "matthias@aternos.org"
-        }
-    ],
+    "require-dev": {
+        "phpunit/phpunit": "^10.4"
+    },
     "suggest": {
         "ext-pcntl": "Required for fork workers",
         "ext-parallel": "Required for thread workers"
     },
-    "require-dev": {
-        "phpunit/phpunit": "^10.4"
+    "scripts": {
+        "test": "phpunit --config phpunit.xml"
     }
 }
