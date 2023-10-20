@@ -25,6 +25,8 @@ Tasks can communicate back to the main process during execution and handle resul
     * [Handling errors](#handling-errors)
       * [Critical errors](#critical-errors)
       * [Uncritical errors](#uncritical-errors)
+  * [Creating tasks](#creating-tasks)
+    * [Task factory](#task-factory)
   * [Defining workers](#defining-workers)
     * [Available workers](#available-workers)
     * [Creating workers](#creating-workers)
@@ -32,6 +34,12 @@ Tasks can communicate back to the main process during execution and handle resul
     * [Defining workers manually](#defining-workers-manually)
     * [Defining workers automatically](#defining-workers-automatically)
     * [Defining workers using environment variables](#defining-workers-using-environment-variables)
+  * [Running tasks](#running-tasks)
+    * [Waiting for tasks to finish](#waiting-for-tasks-to-finish)
+    * [Running the update loop manually](#running-the-update-loop-manually)
+    * [Stopping the taskmaster](#stopping-the-taskmaster)
+  * [Task/worker groups](#taskworker-groups)
+    * [Groups in task factories](#groups-in-task-factories)
 <!-- TOC -->
 
 ## Installation
@@ -236,6 +244,83 @@ When executing tasks synchronously using the [`SyncWorker`](src/Environment/Sync
 error handler is defined to avoid conflicts with other error handler of the main process. Therefore, the
 `handleUncriticalError` function is not called in this case.
 
+## Creating tasks
+
+A task object can simply be created by instancing the task class:
+
+```php
+$task = new SleepTask();
+```
+
+And then added to the taskmaster:
+
+```php
+$taskmaster->addTask($task);
+```
+
+You can add all your tasks at the beginning:
+
+```php
+for ($i = 0; $i < 100; $i++) {
+    $taskmaster->addTask(new SleepTask());
+}
+```
+
+or wait for the taskmaster to finish some tasks and then add more to avoid holding all tasks in memory:
+
+```php
+for ($i = 0; $i < 10; $i++) {
+    for ($j = 0; $j < 10; $j++) {
+        $taskmaster->addTask(new SleepTask());
+    }
+    $taskmaster->waitUntilAllTasksAreAssigned();
+}
+```
+
+### Task factory
+
+The best way to dynamically create tasks when necessary is by creating a task factory, by extending the
+[`TaskFactory`](src/Task/TaskFactory.php) class or implementing
+the [`TaskFactoryInterface`](src/Task/TaskFactoryInterface.php).
+
+```php
+// Your own task factory extending the TaskFactory class
+class SleepTaskFactory extends \Aternos\Taskmaster\Task\TaskFactory
+{
+    protected int $count = 0;
+
+    public function createNextTask(?string $group): ?\Aternos\Taskmaster\Task\TaskInterface
+    {
+        if ($this->count++ < 100) {
+            return new SleepTask();
+        }
+        
+        // Stop creating tasks after 100 tasks
+        return null;
+    }
+}
+
+$taskmaster->addTaskFactory(new SleepTaskFactory());
+```
+
+You can also use the existing [`IteratorTaskFactory`](src/Task/IteratorTaskFactory.php) that creates tasks from an
+iterator.
+
+```php
+// Create an iterator that iterates over all files in the current directory
+$iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator("."));
+
+// Create the task factory using the iterator and a task class that gets the iterator value as constructor argument
+// Note, that the SplFileInfo object that you get from a DirectoryIterator is not serializable and therefore cannot be 
+// stored in a task property, but you can use any other values, e.g. the file path
+$factory = new \Aternos\Taskmaster\Task\IteratorTaskFactory($iterator, FileTask::class);
+
+$taskmaster->addTaskFactory($factory);
+```
+
+You can add multiple task factories to a taskmaster. The taskmaster will use the factories in the order they were
+added. If a factory returns `null`, the next factory is used.
+
 ## Defining workers
 
 A worker executes tasks. There are different workers available that execute tasks in different environments.
@@ -360,8 +445,10 @@ to create the worker configuration:
 | `TASKMASTER_WORKER_BIN`       | Path to the PHP binary to use for the workers, currently only applies to `process` workers.                                                                                |
 | `TASKMASTER_WORKER_PROXY_BIN` | Path to the PHP binary to use for the proxy.                                                                                                                               |
 
-When using the `autoDetectWorkers()` function, it's possible to disable loading the worker configuration from environment variables
-by setting the second argument to `false` or to just disable loading the worker count by setting the third argument to `false`.
+When using the `autoDetectWorkers()` function, it's possible to disable loading the worker configuration from
+environment variables
+by setting the second argument to `false` or to just disable loading the worker count by setting the third argument
+to `false`.
 
 ```php
 // Load count and workers from environment variables
@@ -372,4 +459,114 @@ $taskmaster->autoDetectWorkers(4, false);
 
 // Load worker types from environment variables, but keep the worker count
 $taskmaster->autoDetectWorkers(4, true, false);
+```
+
+## Running tasks
+
+After writing your tasks, creating them and defining the workers, you can start running the tasks.
+You don't have to explicitly start the taskmaster, just running the update loop through the wait
+functions or manually is enough. Workers and proxies are started when necessary.
+
+### Waiting for tasks to finish
+
+You can simply wait for all tasks to finish using the `Taskmaster::wait()` function:
+
+```php
+$taskmaster->wait();
+```
+
+This function blocks until all tasks are finished and then stops the taskmaster.
+If you might want to add further tasks, you can also use the `Taskmaster::waitUntilAllTasksAreAssigned()` function
+to wait until all tasks are assigned to a worker and then add more tasks.
+
+```php
+$taskmaster->waitUntilAllTasksAreAssigned();
+```
+
+This doesn't wait for all tasks to finish, but when all tasks are assigned to a worker, it's the best
+time to add more tasks to avoid any workers being idle.
+
+You should still wait for all tasks to finish using `Taskmaster::wait()` before stopping the taskmaster.
+
+### Running the update loop manually
+
+You can also run the update loop manually and do something else between the updates:
+
+```php
+do {
+    $taskmaster->update();
+    // do something else
+} while ($taskmaster->isRunning());
+```
+This is exactly the code of the `Taskmaster::wait()` function, but you can do something else between the updates.
+
+### Stopping the taskmaster
+
+After you've waited for all tasks to finish, you should stop the taskmaster:
+
+```php
+$taskmaster->stop();
+```
+
+## Task/worker groups
+
+For a more complex setup, you can group several workers together and then define tasks that only
+run on a certain group.
+
+```php
+// create a group A with 4 fork workers
+$workerA = new \Aternos\Taskmaster\Environment\Fork\ForkWorker();
+$workerA->setGroup('A');
+$taskmaster->addWorkers($workerA, 4);
+
+// create a group B with 2 process workers
+$workerB = new \Aternos\Taskmaster\Environment\Process\ProcessWorker();
+$workerB->setGroup('B');
+$taskmaster->addWorkers($workerB, 2);
+
+// create tasks that only run on group A
+for ($i = 0; $i < 10; $i++) {
+    $taskA = new SleepTask();
+    $taskA->setGroup('A');
+    $taskmaster->addTask($taskA);
+}
+
+// create tasks that only run on group B
+for ($i = 0; $i < 5; $i++) {
+    $taskB = new FileTask();
+    $taskB->setGroup('B');
+    $taskmaster->addTask($taskB);
+}
+```
+
+### Groups in task factories
+
+Task factories also support groups in two ways. 
+
+You can directly define, for which groups the task factory
+should be called by returning an array of groups from the `TaskFactory::getGroups()` function. You can return
+`null` if you want to create tasks for all groups or `[null]` in an array if you want to be called for tasks
+without a group.
+
+And you get the group as a parameter in the `TaskFactory::createNextTask(?string $group)` function. The group
+parameter is `null` if the task factory is called for tasks without a group.
+
+```php
+class SleepTaskFactory extends \Aternos\Taskmaster\Task\TaskFactory
+{
+    protected int $count = 0;
+    
+    public function getGroups() : ?array
+    {
+        return ['A', 'B'];
+    }
+
+    public function createNextTask(?string $group): ?\Aternos\Taskmaster\Task\TaskInterface
+    {
+        if ($this->count++ < 100) {
+            return new SleepTask();
+        }
+        return null;
+    }
+}
 ```
