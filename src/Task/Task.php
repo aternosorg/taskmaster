@@ -3,6 +3,7 @@
 namespace Aternos\Taskmaster\Task;
 
 use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
+use Aternos\Taskmaster\Communication\Promise\TaskPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Exception\PhpError;
@@ -32,6 +33,7 @@ abstract class Task implements TaskInterface
     #[OnParent] protected ?string $group = null;
     #[OnParent] protected mixed $result = null;
     #[OnParent] protected ?Exception $error = null;
+    #[OnParent] protected ?TaskPromise $promise = null;
 
     /**
      * @inheritDoc
@@ -229,5 +231,17 @@ abstract class Task implements TaskInterface
             $serializedData[$name] = $property->getValue($this);
         }
         return $serializedData;
+    }
+
+    /**
+     * @inheritDoc
+     * @throws Throwable
+     */
+    public function getPromise(): TaskPromise
+    {
+        if ($this->promise === null) {
+            $this->promise = new TaskPromise($this);
+        }
+        return $this->promise;
     }
 }

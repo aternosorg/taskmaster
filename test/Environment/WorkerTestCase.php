@@ -38,14 +38,14 @@ abstract class WorkerTestCase extends TestCase
         for ($i = 0; $i < $amount; $i++) {
             $clone = clone $task;
             $tasks[] = $clone;
-            $this->taskmaster->addTask($clone);
+            $this->taskmaster->runTask($clone);
         }
         return $tasks;
     }
 
     public function testRunEmptyTask(): void
     {
-        $this->taskmaster->addTask(new EmptyTask());
+        $this->taskmaster->runTask(new EmptyTask());
         $this->taskmaster->wait();
         $this->assertTrue(true);
     }
@@ -53,9 +53,19 @@ abstract class WorkerTestCase extends TestCase
     public function testGetTaskResult(): void
     {
         $task = new AdditionTask(1, 2);
-        $this->taskmaster->addTask($task);
+        $this->taskmaster->runTask($task);
         $this->taskmaster->wait();
         $this->assertEquals(3, $task->getResult());
+    }
+
+    public function testGetTaskResultFromPromise(): void
+    {
+        $task = new AdditionTask(1, 2);
+        $this->taskmaster->runTask($task)->then(function(mixed $result, TaskInterface $resultTask) use($task) {
+            $this->assertSame($task, $resultTask);
+            $this->assertEquals(3, $result);
+        });
+        $this->taskmaster->wait();
     }
 
     public function testRunMultipleTasks(): void
@@ -111,6 +121,16 @@ abstract class WorkerTestCase extends TestCase
             $this->assertInstanceOf(Exception::class, $error);
             $this->assertEquals("Test", $error->getMessage());
         }
+    }
+
+    public function testChildExceptionFromPromise(): void
+    {
+        $task = new ChildExceptionTask("Test");
+        $this->taskmaster->runTask($task)->catch(function(Exception $error, TaskInterface $errorTask) use($task) {
+            $this->assertSame($task, $errorTask);
+            $this->assertEquals("Test", $error->getMessage());
+        });
+        $this->taskmaster->wait();
     }
 
     public function testParentException(): void

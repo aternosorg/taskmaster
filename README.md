@@ -77,7 +77,7 @@ $taskmaster->autoDetectWorkers(4);
 
 // Add tasks to the taskmaster
 for ($i = 0; $i < 8; $i++) {
-    $taskmaster->addTask(new SleepTask());
+    $taskmaster->runTask(new SleepTask());
 }
 
 // Wait for all tasks to finish and stop the taskmaster
@@ -212,6 +212,20 @@ The default implementation in the [`Task`](src/Task/Task.php) class just stores 
 the task object for later access using the `Task::getResult()` function. If you override this
 function, you should call the parent function to store the result or store the result yourself.
 
+You can also use the [`TaskPromise`](src/Communication/Promise/TaskPromise.php) returned from the
+`Taskmaster::runTask()` function or obtainable from the task object using the `Task::getPromise()` function
+to handle the result. The `TaskPromise` is resolved with the return value of the `Task::run()` function. 
+You can use the `TaskPromise::then()` function to handle the result. The first argument is the result,
+the second argument is the task object.
+
+Example:
+
+```php
+$taskmaster->runTask(new SleepTask())->then(function(mixed $result, TaskInterface $task) {
+    echo "The task returned " . $result . PHP_EOL;
+});
+```
+
 ### Handling errors
 
 #### Critical errors
@@ -234,6 +248,19 @@ This should be limited to a few retries to prevent endless loops.
 The default error handler implementation in the [`Task`](src/Task/Task.php) class stores the error in
 the task object for later access using the `Task::getError()` function and writes the error message to `STDERR`.
 When overriding this function, you should call the parent function to store the error or store the error yourself.
+
+You can also use the [`TaskPromise`](src/Communication/Promise/TaskPromise.php) returned from the
+`Taskmaster::runTask()` function or obtainable from the task object using the `Task::getPromise()` function
+to handle the error. The `TaskPromise` is rejected with the error. You can use the `TaskPromise::catch()` function
+to handle the error. The first argument is the error, the second argument is the task object.
+
+Example:
+
+```php
+$taskmaster->runTask(new SleepTask())->catch(function(Exception $error, TaskInterface $task) {
+    echo "The task failed: " . $error->getMessage() . PHP_EOL;
+});
+```
 
 #### Uncritical errors
 
@@ -259,14 +286,14 @@ $task = new SleepTask();
 And then added to the taskmaster:
 
 ```php
-$taskmaster->addTask($task);
+$taskmaster->runTask($task);
 ```
 
 You can add all your tasks at the beginning:
 
 ```php
 for ($i = 0; $i < 100; $i++) {
-    $taskmaster->addTask(new SleepTask());
+    $taskmaster->runTask(new SleepTask());
 }
 ```
 
@@ -275,7 +302,7 @@ or wait for the taskmaster to finish some tasks and then add more to avoid holdi
 ```php
 for ($i = 0; $i < 10; $i++) {
     for ($j = 0; $j < 10; $j++) {
-        $taskmaster->addTask(new SleepTask());
+        $taskmaster->runTask(new SleepTask());
     }
     $taskmaster->waitUntilAllTasksAreAssigned();
 }
@@ -532,14 +559,14 @@ $taskmaster->addWorkers($workerB, 2);
 for ($i = 0; $i < 10; $i++) {
     $taskA = new SleepTask();
     $taskA->setGroup('A');
-    $taskmaster->addTask($taskA);
+    $taskmaster->runTask($taskA);
 }
 
 // create tasks that only run on group B
 for ($i = 0; $i < 5; $i++) {
     $taskB = new FileTask();
     $taskB->setGroup('B');
-    $taskmaster->addTask($taskB);
+    $taskmaster->runTask($taskB);
 }
 ```
 

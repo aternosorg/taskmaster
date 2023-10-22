@@ -2,6 +2,7 @@
 
 namespace Aternos\Taskmaster;
 
+use Aternos\Taskmaster\Communication\Promise\TaskPromise;
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Environment\Fork\ForkWorker;
@@ -71,15 +72,13 @@ class Taskmaster
      * When using a task factory, the task will only be executed after
      * the task factory has stopped creating tasks.
      *
-     * @param TaskInterface ...$task
-     * @return $this
+     * @param TaskInterface $task
+     * @return TaskPromise
      */
-    public function addTask(TaskInterface ...$task): static
+    public function runTask(TaskInterface $task): TaskPromise
     {
-        foreach ($task as $t) {
-            $this->tasks[] = $t;
-        }
-        return $this;
+        $this->tasks[] = $task;
+        return $task->getPromise();
     }
 
     /**

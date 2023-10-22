@@ -127,7 +127,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             $this->currentTask = null;
             $this->currentResponsePromise = null;
         });
-        return new TaskPromise($request->getTask(), $responsePromise);
+        return $request->getTask()->getPromise()->setResponsePromise($responsePromise);
     }
 
     /**
@@ -137,7 +137,6 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     {
         return $this->status;
     }
-
 
     /**
      * Handle a fail of the worker instance

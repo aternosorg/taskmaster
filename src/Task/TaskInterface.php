@@ -2,6 +2,7 @@
 
 namespace Aternos\Taskmaster\Task;
 
+use Aternos\Taskmaster\Communication\Promise\TaskPromise;
 use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Exception\PhpFatalErrorException;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
@@ -96,4 +97,15 @@ interface TaskInterface
      */
     #[OnChild]
     public function setRuntime(RuntimeInterface $runtime): static;
+
+    /**
+     * Get the unique promise for this task
+     *
+     * This promise is resolved when the task is finished or rejected when the task has a fatal error.
+     * It should be stored using the #[OnParent] attribute as promises are not serializable.
+     *
+     * @return TaskPromise
+     */
+    #[OnParent]
+    public function getPromise(): TaskPromise;
 }
