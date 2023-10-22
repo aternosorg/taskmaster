@@ -3,6 +3,7 @@
 namespace Aternos\Taskmaster\Worker\Instance;
 
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
+use Aternos\Taskmaster\Communication\Promise\TaskPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
@@ -89,8 +90,9 @@ abstract class WorkerInstance implements WorkerInstanceInterface
 
     /**
      * @inheritDoc
+     * @throws Throwable
      */
-    public function runTask(TaskInterface $task): ResponsePromise
+    public function runTask(TaskInterface $task): TaskPromise
     {
         $this->status = WorkerInstanceStatus::WORKING;
         $this->currentTask = $task;
@@ -104,13 +106,14 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      * Gets {@link Synchronized} fields from the task response and applies them to the task.
      *
      * @param RunTaskRequest $request
-     * @return ResponsePromise
+     * @return TaskPromise
+     * @throws Throwable
      */
-    protected function sendRunTaskRequest(RunTaskRequest $request): ResponsePromise
+    protected function sendRunTaskRequest(RunTaskRequest $request): TaskPromise
     {
-        $promise = $this->sendRequest($request);
-        $this->currentResponsePromise = $promise;
-        $promise->then(function (ResponseInterface $response) {
+        $responsePromise = $this->sendRequest($request);
+        $this->currentResponsePromise = $responsePromise;
+        $responsePromise->then(function (ResponseInterface $response) {
             if ($response instanceof TaskMessageInterface) {
                 $response->applyToTask($this->currentTask);
             }
@@ -125,7 +128,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             $this->currentTask = null;
             $this->currentResponsePromise = null;
         });
-        return $promise;
+        return new TaskPromise($request->getTask(), $responsePromise);
     }
 
     /**

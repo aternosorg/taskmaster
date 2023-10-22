@@ -22,4 +22,12 @@ class RunTaskRequest extends Request
     {
         parent::__construct();
     }
+
+    /**
+     * @return TaskInterface
+     */
+    public function getTask(): TaskInterface
+    {
+        return $this->task;
+    }
 }

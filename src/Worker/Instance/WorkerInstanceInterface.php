@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Worker\Instance;
 
 use Aternos\Taskmaster\Communication\CommunicatorInterface;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
+use Aternos\Taskmaster\Communication\Promise\TaskPromise;
 use Aternos\Taskmaster\Exception\WorkerFailedException;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
@@ -65,9 +66,9 @@ interface WorkerInstanceInterface extends CommunicatorInterface
      * Send the task to the worker instance and return a response promise which is resolved asynchronously.
      *
      * @param TaskInterface $task
-     * @return ResponsePromise
+     * @return TaskPromise
      */
-    public function runTask(TaskInterface $task): ResponsePromise;
+    public function runTask(TaskInterface $task): TaskPromise;
 
     /**
      * Update the worker instance, e.g. by reading a socket and checking if the worker is still alive

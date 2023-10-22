@@ -8,7 +8,7 @@ namespace Aternos\Taskmaster\Exception;
  * Represents a PHP error, received from an error handler
  *
  * @see https://www.php.net/manual/en/function.set-error-handler.php
- * @package Aternos\Taskmaster\Communication\Response
+ * @package Aternos\Taskmaster\Exception
  */
 class PhpError
 {
