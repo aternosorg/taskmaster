@@ -27,8 +27,10 @@ trait TaskMessageTrait
             if ($property->isStatic() || !$property->isInitialized($task)) {
                 continue;
             }
-            $attributes = $property->getAttributes(Synchronized::class);
-            if (count($attributes) === 0) {
+            if ($property->getAttributes(OnChild::class)) {
+                continue;
+            }
+            if ($property->getAttributes(OnParent::class)) {
                 continue;
             }
             $name = $property->getName();

@@ -9,7 +9,7 @@ use Aternos\Taskmaster\Task\TaskMessageTrait;
 /**
  * Class TaskResponse
  *
- * Task responses include {@link Synchronized} fields using {@link TaskMessageTrait}
+ * Task responses include synchronized fields using {@link TaskMessageTrait}
  *
  * @package Aternos\Taskmaster\Communication\Response
  */

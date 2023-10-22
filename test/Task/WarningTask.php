@@ -3,19 +3,19 @@
 namespace Aternos\Taskmaster\Test\Task;
 
 use Aternos\Taskmaster\Exception\PhpError;
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
-use Aternos\Taskmaster\Task\Synchronized;
+use Aternos\Taskmaster\Task\OnBoth;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 use Aternos\Taskmaster\Task\Task;
 
 class WarningTask extends Task
 {
-    #[Synchronized] protected ?PhpError $phpError = null;
+    #[OnBoth] protected ?PhpError $phpError = null;
 
     /**
      * @return void
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
         trigger_error("Test", E_USER_WARNING);
@@ -25,7 +25,7 @@ class WarningTask extends Task
      * @param PhpError $error
      * @return bool
      */
-    #[RunOnChild]
+    #[OnChild]
     public function handleUncriticalError(PhpError $error): bool
     {
         $this->phpError = $error;
@@ -35,7 +35,7 @@ class WarningTask extends Task
     /**
      * @return PhpError|null
      */
-    #[RunOnParent]
+    #[OnParent]
     public function getPhpError(): ?PhpError
     {
         return $this->phpError;

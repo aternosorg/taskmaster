@@ -2,14 +2,14 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 use Exception;
 use Throwable;
 
 class ParentExceptionTask extends SuppressedErrorOutputTask
 {
-    #[RunOnParent]
+    #[OnParent]
     public function __construct(protected string $message)
     {
     }
@@ -17,7 +17,7 @@ class ParentExceptionTask extends SuppressedErrorOutputTask
     /**
      * @throws Exception
      */
-    #[RunOnParent]
+    #[OnParent]
     public function throwException(): void
     {
         throw new Exception($this->message);
@@ -26,7 +26,7 @@ class ParentExceptionTask extends SuppressedErrorOutputTask
     /**
      * @throws Throwable
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
         $this->call($this->throwException(...));

@@ -2,10 +2,9 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnBoth;
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
-use Aternos\Taskmaster\Task\Synchronized;
+use Aternos\Taskmaster\Task\OnBoth;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 use Aternos\Taskmaster\Task\Task;
 use ReflectionException;
 use Throwable;
@@ -14,20 +13,20 @@ class SleepCountTask extends Task
 {
     static protected int $current = 0;
 
-    #[Synchronized] protected int $counter = 0;
+    #[OnBoth] protected int $counter = 0;
 
     public function __construct(public string $name, protected int $countTarget, protected int $sleepTime = 1)
     {
     }
 
-    #[RunOnParent]
+    #[OnParent]
     public function getCurrent(): int
     {
         $this->increaseAndOutputCounter();
         return static::$current++;
     }
 
-    #[RunOnBoth]
+    #[OnBoth]
     protected function increaseAndOutputCounter(): void
     {
         $this->counter++;
@@ -38,7 +37,7 @@ class SleepCountTask extends Task
      * @throws ReflectionException
      * @throws Throwable
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): int
     {
         $current = 0;
@@ -52,7 +51,7 @@ class SleepCountTask extends Task
         return $current;
     }
 
-    #[RunOnParent]
+    #[OnParent]
     public function handleResult(mixed $result): void
     {
         $this->increaseAndOutputCounter();

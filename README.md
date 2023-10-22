@@ -18,8 +18,8 @@ Tasks can communicate back to the main process during execution and handle resul
 * [Writing tasks](#writing-tasks)
   * [The `run()` function](#the-run-function)
   * [Call back to the main process](#call-back-to-the-main-process)
-  * [RunOn attributes](#runon-attributes)
-  * [Synchronized fields](#synchronized-fields)
+  * [Child/parent attributes](#childparent-attributes)
+    * [Synchronized properties](#synchronized-properties)
   * [Handling the result](#handling-the-result)
   * [Handling errors](#handling-errors)
     * [Critical errors](#critical-errors)
@@ -125,13 +125,13 @@ class CallbackTask extends \Aternos\Taskmaster\Task\Task
 {
     static protected int $current = 0;
 
-    #[RunOnParent]
+    #[OnParent]
     public function getCurrent(): int
     {
         return static::$current++;
     }
 
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
         $current = $this->call($this->getCurrent(...));
@@ -140,46 +140,55 @@ class CallbackTask extends \Aternos\Taskmaster\Task\Task
 }
  ```
 
-### RunOn attributes
+### Child/parent attributes
 
 As seen in the example above, it's possible to define functions that are executed in the main
-process [`RunOnParent`](src/Task/RunOnParent.php),
-in the child process [`RunOnChild`](src/Task/RunOnChild.php) or in both [`RunOnBoth`](src/Task/RunOnBoth.php) using
+process [`OnParent`](src/Task/OnParent.php),
+in the child process [`OnChild`](src/Task/OnChild.php) or in both [`OnBoth`](src/Task/OnBoth.php) using
 attributes.
 
-These attributes are optional and mostly used as a documentation for the developer to clearly show which methods are
-executed where. The only implemented restriction is that functions marked with
-the [`RunOnChild`](src/Task/RunOnChild.php)
+These attributes are optional (default is [`OnBoth`](src/Task/OnBoth.php)) and for methods mostly used as a 
+documentation for the developer to clearly show which methods are executed where. The only implemented 
+restriction for methods is that functions marked with the [`OnChild`](src/Task/OnChild.php)
 attribute must not be called using the `Task::call()` or `Task::callAsync()` functions.
 
-### Synchronized fields
+The attributes can also be used on properties:
 
-A task is serialized at the beginning and sent to a [`Runtime`](src/Runtime/Runtime.php) to be executed.
-After that, any changes to the task properties only happen in the runtime and might not be available
-in the main process. To synchronize a field, it must be defined as a synchronized field using the
-[`Synchronized`](src/Task/Synchronized.php) attribute.
+#### Synchronized properties
 
-Properties marked with this attribute are synchronized automatically when the task is executed, a remote call is
-made using `Task::callAsync()` or `Task::call()` or when the task result is sent back to the parent.
+Besides the usage for methods mentioned above, the attributes can also be used on properties to define
+where task properties are used and synchronized.
 
-The synchronisation ONLY happens on those events, changes to the property are not immediately synchronized.
-The properties marked with this attribute have to be serializable.
+Properties marked with the [`OnParent`](src/Task/OnParent.php) attribute are only available in the main process
+and not serialized when running the task. They can contain unserializable values such as closures or resources.
+
+Properties marked with the [`OnChild`](src/Task/OnChild.php) attribute are initially serialized and sent to the
+child process, so they can be set initially on the parent. After that, they are only available in the child
+process and never synchronized back to the parent. So the child process in the `Task::run()` function can
+set the values of those properties to something unserializable.
+
+Properties marked with the [`OnBoth`](src/Task/OnBoth.php) or no attribute are initially serialized and sent to the
+child process. They are synchronized back to the parent when `Task::callAsync()` or `Task::call()` is
+used to call a function in the main process. They are also synchronized back to the parent when the task
+is finished or (safely) errors with an exception. The synchronisation ONLY happens on those events, changes 
+to the property are not immediately synchronized. The properties marked with this attribute have to be always 
+serializable.
 
 Example:
 
 ```php
 class SynchronizedFieldTask extends \Aternos\Taskmaster\Task\Task
 {
-    #[Synchronized] 
+    #[OnBoth] 
     protected int $counter = 0;
 
-    #[RunOnBoth]
+    #[OnBoth]
     public function increaseCounter(): void
     {
         $this->counter++;
     }
 
-    #[RunOnChild]
+    #[OnChild]
     public function run(): null
     {
         for ($i = 0; $i < 3; $i++) {

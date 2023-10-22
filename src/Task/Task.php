@@ -4,7 +4,6 @@ namespace Aternos\Taskmaster\Task;
 
 use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
-use Aternos\Taskmaster\Communication\Response\ErrorResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
@@ -13,6 +12,7 @@ use Exception;
 use InvalidArgumentException;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionObject;
 use Throwable;
 
 /**
@@ -28,15 +28,15 @@ use Throwable;
  */
 abstract class Task implements TaskInterface
 {
-    protected ?RuntimeInterface $runtime = null;
-    protected ?string $group = null;
-    protected mixed $result = null;
-    protected ?Exception $error = null;
+    #[OnChild] protected ?RuntimeInterface $runtime = null;
+    #[OnParent] protected ?string $group = null;
+    #[OnParent] protected mixed $result = null;
+    #[OnParent] protected ?Exception $error = null;
 
     /**
      * @inheritDoc
      */
-    #[RunOnChild]
+    #[OnChild]
     public function setRuntime(RuntimeInterface $runtime): static
     {
         $this->runtime = $runtime;
@@ -52,7 +52,7 @@ abstract class Task implements TaskInterface
      *
      * @return mixed
      */
-    #[RunOnParent]
+    #[OnParent]
     public function getResult(): mixed
     {
         return $this->result;
@@ -68,7 +68,7 @@ abstract class Task implements TaskInterface
      *
      * @return Exception|null
      */
-    #[RunOnParent]
+    #[OnParent]
     public function getError(): ?Exception
     {
         return $this->error;
@@ -78,11 +78,10 @@ abstract class Task implements TaskInterface
      * Call a function on the parent asynchronously
      *
      * This function can be used to call a function on the parent process asynchronously.
-     * The function has to be a public method of the task class and must not be marked with the {@link RunOnChild}
+     * The function has to be a public method of the task class and must not be marked with the {@link OnChild}
      * attribute.
      *
-     * Any {@link Synchronized} fields are synchronized before the function is called and before the response is
-     * returned.
+     * Any fields are synchronized before the function is called and before the response is returned.
      *
      * The asynchronous call returns a {@link ResponseDataPromise} which can be used to wait for the response.
      * The response data is the return value of the called function.
@@ -94,7 +93,7 @@ abstract class Task implements TaskInterface
      * @return ResponseDataPromise
      * @throws ReflectionException|Throwable
      */
-    #[RunOnChild]
+    #[OnChild]
     protected function callAsync(string|Closure $function, mixed ...$arguments): ResponseDataPromise
     {
         if ($function instanceof Closure) {
@@ -102,8 +101,8 @@ abstract class Task implements TaskInterface
             if ($reflectionFunction->getClosureThis() !== $this) {
                 throw new InvalidArgumentException("You can only call closures bound to the current object.");
             }
-            if ($reflectionFunction->getAttributes(RunOnChild::class)) {
-                throw new InvalidArgumentException("You can not call closures with the #[RunOnChild] attribute.");
+            if ($reflectionFunction->getAttributes(OnChild::class)) {
+                throw new InvalidArgumentException("You can not call closures with the #[OnChild] attribute.");
             }
             $function = $reflectionFunction->getName();
         }
@@ -118,12 +117,12 @@ abstract class Task implements TaskInterface
     /**
      * Handle a task response
      *
-     * Applies all {@link Synchronized} fields from the response to the task if possible.
+     * Applies all synchronized fields from the response to the task if possible.
      *
      * @param ResponseInterface $response
      * @return void
      */
-    #[RunOnChild]
+    #[OnChild]
     protected function handleTaskResponse(ResponseInterface $response): void
     {
         if (!$response instanceof TaskMessageInterface) {
@@ -136,10 +135,9 @@ abstract class Task implements TaskInterface
      * Call a function on the parent and wait for the response
      *
      * This function can be used to call a function on the parent process. The function has to be a public
-     * method of the task class and must not be marked with the {@link RunOnChild} attribute.
+     * method of the task class and must not be marked with the {@link OnChild} attribute.
      *
-     * Any {@link Synchronized} fields are synchronized before the function is called and before the response is
-     * returned.
+     * Any fields are synchronized before the function is called and before the response is returned.
      *
      * This function returns the return value of the called function.
      *
@@ -151,7 +149,7 @@ abstract class Task implements TaskInterface
      * @throws ReflectionException
      * @throws Throwable
      */
-    #[RunOnChild]
+    #[OnChild]
     protected function call(string|Closure $function, mixed ...$arguments): mixed
     {
         return $this->callAsync($function, ...$arguments)->wait();
@@ -160,7 +158,7 @@ abstract class Task implements TaskInterface
     /**
      * @inheritDoc
      */
-    #[RunOnParent]
+    #[OnParent]
     public function handleResult(mixed $result): void
     {
         $this->result = $result;
@@ -169,7 +167,7 @@ abstract class Task implements TaskInterface
     /**
      * @inheritDoc
      */
-    #[RunOnParent]
+    #[OnParent]
     public function handleError(Exception $error): void
     {
         $this->error = $error;
@@ -179,7 +177,7 @@ abstract class Task implements TaskInterface
     /**
      * @inheritDoc
      */
-    #[RunOnChild]
+    #[OnChild]
     public function handleUncriticalError(PhpError $error): bool
     {
         return false;
@@ -188,7 +186,7 @@ abstract class Task implements TaskInterface
     /**
      * @inheritDoc
      */
-    #[RunOnParent]
+    #[OnParent]
     public function getGroup(): ?string
     {
         return $this->group;
@@ -200,10 +198,36 @@ abstract class Task implements TaskInterface
      * @param string|null $group
      * @return $this
      */
-    #[RunOnParent]
+    #[OnParent]
     public function setGroup(?string $group): static
     {
         $this->group = $group;
         return $this;
+    }
+
+    /**
+     * Filter the task properties that should be serialized
+     *
+     * This method is called when the task is serialized and sent to the child process.
+     * It removes all properties that are marked with the {@link OnParent} attribute.
+     *
+     * @see https://www.php.net/manual/en/language.oop5.magic.php#object.serialize
+     * @return array
+     */
+    public function __serialize(): array
+    {
+        $reflectionObject = new ReflectionObject($this);
+        $serializedData = [];
+        foreach ($reflectionObject->getProperties() as $property) {
+            if ($property->isStatic() || !$property->isInitialized($this)) {
+                continue;
+            }
+            if ($property->getAttributes(OnParent::class)) {
+                continue;
+            }
+            $name = $property->getName();
+            $serializedData[$name] = $property->getValue($this);
+        }
+        return $serializedData;
     }
 }

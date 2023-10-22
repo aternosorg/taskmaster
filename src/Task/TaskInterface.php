@@ -28,7 +28,7 @@ interface TaskInterface
      * @param mixed $result
      * @return void
      */
-    #[RunOnParent]
+    #[OnParent]
     public function handleResult(mixed $result): void;
 
     /**
@@ -46,7 +46,7 @@ interface TaskInterface
      * @param Exception $error
      * @return void
      */
-    #[RunOnParent]
+    #[OnParent]
     public function handleError(Exception $error): void;
 
     /**
@@ -54,7 +54,7 @@ interface TaskInterface
      *
      * @return string|null
      */
-    #[RunOnParent]
+    #[OnParent]
     public function getGroup(): ?string;
 
     /**
@@ -69,7 +69,7 @@ interface TaskInterface
      * @return mixed
      * @noinspection PhpMissingReturnTypeInspection No return type is intentional, to allow void as return type in child classes
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run();
 
     /**
@@ -82,7 +82,7 @@ interface TaskInterface
      * @param PhpError $error
      * @return bool
      */
-    #[RunOnChild]
+    #[OnChild]
     public function handleUncriticalError(PhpError $error): bool;
 
     /**
@@ -94,6 +94,6 @@ interface TaskInterface
      * @param RuntimeInterface $runtime
      * @return $this
      */
-    #[RunOnChild]
+    #[OnChild]
     public function setRuntime(RuntimeInterface $runtime): static;
 }

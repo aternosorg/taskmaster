@@ -2,8 +2,8 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 use Aternos\Taskmaster\Task\Task;
 use ReflectionException;
 use Throwable;
@@ -20,7 +20,7 @@ class CallbackTask extends Task
         self::$counter = 0;
     }
 
-    #[RunOnParent]
+    #[OnParent]
     public function __construct(protected int $amount)
     {
     }
@@ -28,7 +28,7 @@ class CallbackTask extends Task
     /**
      * @return int
      */
-    #[RunOnParent]
+    #[OnParent]
     public function getAndIncreaseCounter(): int
     {
         return self::$counter++;
@@ -39,7 +39,7 @@ class CallbackTask extends Task
      * @throws ReflectionException
      * @throws Throwable
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): array
     {
         $result = [];

@@ -2,8 +2,8 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 use Aternos\Taskmaster\Task\Task;
 
 class AdditionTask extends Task
@@ -12,7 +12,7 @@ class AdditionTask extends Task
      * @param int $a
      * @param int $b
      */
-    #[RunOnParent]
+    #[OnParent]
     public function __construct(protected int $a, protected int $b)
     {
     }
@@ -20,7 +20,7 @@ class AdditionTask extends Task
     /**
      * @return int
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): int
     {
         return $this->a + $this->b;
@@ -30,7 +30,7 @@ class AdditionTask extends Task
      * @param mixed $result
      * @return void
      */
-    #[RunOnParent]
+    #[OnParent]
     public function handleResult(mixed $result): void
     {
         $this->result = $result;

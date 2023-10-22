@@ -7,7 +7,7 @@ use Aternos\Taskmaster\Communication\MessageInterface;
 /**
  * Interface TaskMessageInterface
  *
- * This interface is used to mark a message class that contains {@link Synchronized} properties and can be used to
+ * This interface is used to mark a message class that contains synchronized properties and can be used to
  * synchronize these properties between the parent and the child process.
  *
  * @package Aternos\Taskmaster\Task

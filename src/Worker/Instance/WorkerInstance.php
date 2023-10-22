@@ -12,7 +12,6 @@ use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\Response\TaskResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Exception\WorkerFailedException;
-use Aternos\Taskmaster\Task\Synchronized;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Task\TaskMessageInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
@@ -68,7 +67,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     /**
      * Handle an {@link ExecuteFunctionRequest} to execute a function on the current task.
      *
-     * Applies {@link Synchronized} fields to the task before executing the function and adds them
+     * Applies synchronized fields to the task before executing the function and adds them
      * back to the response after execution.
      * Also catches exceptions and returns an {@link ExceptionResponse} to the child instead.
      *
@@ -103,7 +102,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      * Send a {@link RunTaskRequest} to the worker instance
      *
      * Returns a {@link ResponsePromise} which can be resolved asynchronously.
-     * Gets {@link Synchronized} fields from the task response and applies them to the task.
+     * Gets synchronized fields from the task response and applies them to the task.
      *
      * @param RunTaskRequest $request
      * @return TaskPromise

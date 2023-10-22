@@ -2,15 +2,15 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 
 class ErrorTask extends SuppressedErrorOutputTask
 {
     /**
      * @param string $message
      */
-    #[RunOnParent]
+    #[OnParent]
     public function __construct(protected string $message)
     {
     }
@@ -18,7 +18,7 @@ class ErrorTask extends SuppressedErrorOutputTask
     /**
      * @return void
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
         trigger_error($this->message, E_USER_ERROR);

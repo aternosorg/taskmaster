@@ -2,19 +2,18 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnBoth;
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
-use Aternos\Taskmaster\Task\Synchronized;
+use Aternos\Taskmaster\Task\OnBoth;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 use Aternos\Taskmaster\Task\Task;
 use ReflectionException;
 use Throwable;
 
 class SynchronizedFieldTask extends Task
 {
-    #[Synchronized] protected int $counter = 0;
+    #[OnBoth] protected int $counter = 0;
 
-    #[RunOnParent]
+    #[OnParent]
     public function __construct(protected int $amount)
     {
     }
@@ -22,7 +21,7 @@ class SynchronizedFieldTask extends Task
     /**
      * @return void
      */
-    #[RunOnBoth]
+    #[OnBoth]
     public function increaseCounter(): void
     {
         $this->counter++;
@@ -32,7 +31,7 @@ class SynchronizedFieldTask extends Task
      * @throws ReflectionException
      * @throws Throwable
      */
-    #[RunOnChild]
+    #[OnChild]
     public function run(): null
     {
         for ($i = 0; $i < $this->amount; $i++) {
@@ -46,7 +45,7 @@ class SynchronizedFieldTask extends Task
      * @param mixed $result
      * @return void
      */
-    #[RunOnParent]
+    #[OnParent]
     public function handleResult(mixed $result): void
     {
         $this->result = $this->counter;

@@ -2,12 +2,12 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
+use Aternos\Taskmaster\Task\OnChild;
 use Aternos\Taskmaster\Task\Task;
 
 class ExitTask extends SuppressedErrorOutputTask
 {
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
         exit;

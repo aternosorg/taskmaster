@@ -2,12 +2,12 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
+use Aternos\Taskmaster\Task\OnChild;
 use Aternos\Taskmaster\Task\Task;
 
 class EmptyTask extends Task
 {
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
     }

@@ -12,6 +12,7 @@ use Aternos\Taskmaster\Test\Task\EmptyTask;
 use Aternos\Taskmaster\Test\Task\ChildExceptionTask;
 use Aternos\Taskmaster\Test\Task\ParentExceptionTask;
 use Aternos\Taskmaster\Test\Task\SynchronizedFieldTask;
+use Aternos\Taskmaster\Test\Task\UnsynchronizedFieldTask;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -89,6 +90,15 @@ abstract class WorkerTestCase extends TestCase
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
             $this->assertEquals(6, $task->getResult());
+        }
+    }
+
+    public function testUnsynchronizedFields(): void
+    {
+        $tasks = $this->addTasks(new UnsynchronizedFieldTask(), 10);
+        $this->taskmaster->wait();
+        foreach ($tasks as $task) {
+            $this->assertNull($task->getError());
         }
     }
 

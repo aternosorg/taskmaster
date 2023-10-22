@@ -2,25 +2,25 @@
 
 namespace Aternos\Taskmaster\Test\Task;
 
-use Aternos\Taskmaster\Task\RunOnChild;
-use Aternos\Taskmaster\Task\RunOnParent;
+use Aternos\Taskmaster\Task\OnChild;
+use Aternos\Taskmaster\Task\OnParent;
 
 class SleepStatusTask extends SuppressedErrorOutputTask
 {
     protected bool $running = false;
 
-    #[RunOnParent]
+    #[OnParent]
     public function __construct(protected int $microseconds)
     {
     }
 
-    #[RunOnParent]
+    #[OnParent]
     public function setRunning(): void
     {
         $this->running = true;
     }
 
-    #[RunOnChild]
+    #[OnChild]
     public function run(): void
     {
         $this->call($this->setRunning(...));
