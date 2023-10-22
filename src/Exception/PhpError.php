@@ -1,6 +1,6 @@
 <?php
 
-namespace Aternos\Taskmaster\Communication\Response;
+namespace Aternos\Taskmaster\Exception;
 
 /**
  * Class PhpError

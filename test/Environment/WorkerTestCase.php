@@ -12,6 +12,7 @@ use Aternos\Taskmaster\Test\Task\EmptyTask;
 use Aternos\Taskmaster\Test\Task\ChildExceptionTask;
 use Aternos\Taskmaster\Test\Task\ParentExceptionTask;
 use Aternos\Taskmaster\Test\Task\SynchronizedFieldTask;
+use Exception;
 use PHPUnit\Framework\TestCase;
 
 abstract class WorkerTestCase extends TestCase
@@ -97,9 +98,8 @@ abstract class WorkerTestCase extends TestCase
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
             $error = $task->getError();
-            $this->assertInstanceOf(ExceptionResponse::class, $error);
-            $this->assertInstanceOf(\Exception::class, $error->getException());
-            $this->assertEquals("Test", $error->getException()->getMessage());
+            $this->assertInstanceOf(Exception::class, $error);
+            $this->assertEquals("Test", $error->getMessage());
         }
     }
 
@@ -109,9 +109,8 @@ abstract class WorkerTestCase extends TestCase
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
             $error = $task->getError();
-            $this->assertInstanceOf(ExceptionResponse::class, $error);
-            $this->assertInstanceOf(\Exception::class, $error->getException());
-            $this->assertEquals("Test", $error->getException()->getMessage());
+            $this->assertInstanceOf(Exception::class, $error);
+            $this->assertEquals("Test", $error->getMessage());
         }
     }
 

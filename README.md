@@ -207,23 +207,19 @@ function, you should call the parent function to store the result or store the r
 
 #### Critical errors
 
-The `handleError` function is called when the task caused a fatal unrecoverable error. There are
-different kind of errors that can occur represented by
-different [`ErrorResponse`](src/Communication/Response/ErrorResponse.php)
-classes.
+The `handleError` function is called when the task caused a fatal unrecoverable error. The first
+parameter is an `Exception` that is thrown by the task or by this library.
 
-Common error responses are an [`ExceptionResponse`](src/Communication/Response/ExceptionResponse.php)
-caused by an uncaught exception, a [`PhpFatalErrorResponse`](src/Communication/Response/PhpFatalErrorResponse.php)
-caused by a fatal PHP error or a [`WorkerFailedResponse`](src/Communication/Response/WorkerFailedResponse.php) if
-the worker process exited unexpectedly.
+The two special exception thrown by this library are the [`PhpFatalErrorException`](src/Exception/PhpFatalErrorException.php)
+cause by a fatal PHP error and the [`WorkerFailedException`](src/Exception/WorkerFailedException.php) that is thrown
+when the worker process exited unexpectedly.
 
 PHP fatal errors can only be caught if they were caused in a separate process, e.g. when using
-the [`ForkWorker`](src/Environment/Fork/ForkWorker.php)
-or the [`ProcessWorker`](src/Environment/Process/ProcessWorker.php). It's not recommended to rely on this.
+the [`ForkWorker`](src/Environment/Fork/ForkWorker.php) or the [`ProcessWorker`](src/Environment/Process/ProcessWorker.php). 
+It's not recommended to rely on this.
 
-If a worker fails and the worker gets a [`WorkerFailedResponse`](src/Communication/Response/WorkerFailedResponse.php),
-it
-is possible that this was not caused by the task itself and therefore a retry of the task might be possible.
+If a worker fails and the task gets a [`WorkerFailedException`](src/Exception/WorkerFailedException.php),
+it is possible that this was not caused by the task itself and therefore a retry of the task might be possible.
 This should be limited to a few retries to prevent endless loops.
 
 The default error handler implementation in the [`Task`](src/Task/Task.php) class stores the error in

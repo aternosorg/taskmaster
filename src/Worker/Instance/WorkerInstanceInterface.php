@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Worker\Instance;
 
 use Aternos\Taskmaster\Communication\CommunicatorInterface;
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
+use Aternos\Taskmaster\Exception\WorkerFailedException;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
@@ -90,7 +91,7 @@ interface WorkerInstanceInterface extends CommunicatorInterface
     /**
      * Handle a fail of the worker instance
      *
-     * If necessary, it resolves the current task response promise with a {@link WorkerFailedResponse}.
+     * If necessary, it resolves the current task response promise with a {@link WorkerFailedException}.
      *
      * @param string|null $reason
      * @return $this

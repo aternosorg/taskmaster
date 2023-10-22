@@ -2,8 +2,7 @@
 
 namespace Aternos\Taskmaster\Test\Environment;
 
-use Aternos\Taskmaster\Communication\Response\ErrorResponse;
-use Aternos\Taskmaster\Communication\Response\WorkerFailedResponse;
+use Aternos\Taskmaster\Exception\WorkerFailedException;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Task\SleepStatusTask;
@@ -37,7 +36,7 @@ trait ProxiedWorkerTestTrait
         }
         $this->taskmaster->wait();
         foreach ($tasks as $task) {
-            $this->assertInstanceOf(WorkerFailedResponse::class, $task->getError());
+            $this->assertInstanceOf(WorkerFailedException::class, $task->getError());
         }
     }
 
@@ -60,7 +59,7 @@ trait ProxiedWorkerTestTrait
         $this->taskmaster->wait();
         foreach ($tasks as $i => $task) {
             if ($i < 3) {
-                $this->assertInstanceOf(WorkerFailedResponse::class, $task->getError());
+                $this->assertInstanceOf(WorkerFailedException::class, $task->getError());
             } else {
                 $this->assertNull($task->getError());
             }

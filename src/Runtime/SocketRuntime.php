@@ -2,13 +2,14 @@
 
 namespace Aternos\Taskmaster\Runtime;
 
-use Aternos\Taskmaster\Communication\Response\PhpError;
-use Aternos\Taskmaster\Communication\Response\PhpFatalErrorResponse;
+use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\Socket;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
+use Aternos\Taskmaster\Exception\PhpError;
+use Aternos\Taskmaster\Exception\PhpFatalErrorException;
 use Aternos\Taskmaster\Taskmaster;
 
 /**
@@ -41,7 +42,7 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
     /**
      * Error handler for {@link set_error_handler()}
      *
-     * This handler will send a {@link PhpFatalErrorResponse} to the master if a fatal error occurs.
+     * This handler will send a {@link PhpFatalErrorException} to the master if a fatal error occurs.
      * Otherwise, the task will be notified about the error via {@link TaskInterface::handleUncriticalError()}.
      * If {@link TaskInterface::handleUncriticalError()} returns false, the error will be handled by PHP.
      *
@@ -63,7 +64,8 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
             return $this->currentTaskRequest->task->handleUncriticalError($phpError);
         }
 
-        $response = new PhpFatalErrorResponse($this->currentTaskRequest->getRequestId(), $phpError);
+        $exception = new PhpFatalErrorException($phpError);
+        $response = new ExceptionResponse($this->currentTaskRequest->getRequestId(), $exception);
         try {
             $this->socket->sendMessage($response);
         } catch (SocketWriteException $e) {

@@ -2,7 +2,7 @@
 
 namespace Aternos\Taskmaster\Test\Environment;
 
-use Aternos\Taskmaster\Communication\Response\PhpError;
+use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Task\SleepTask;
 use Aternos\Taskmaster\Test\Task\WarningTask;

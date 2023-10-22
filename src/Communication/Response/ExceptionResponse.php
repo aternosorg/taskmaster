@@ -3,8 +3,6 @@
 namespace Aternos\Taskmaster\Communication\Response;
 
 use Aternos\Taskmaster\Communication\Promise\ResponsePromise;
-use Aternos\Taskmaster\Task\TaskMessageInterface;
-use Aternos\Taskmaster\Task\TaskMessageTrait;
 use Exception;
 
 /**
@@ -15,10 +13,8 @@ use Exception;
  *
  * @package Aternos\Taskmaster\Communication\Response
  */
-class ExceptionResponse extends ErrorResponse implements TaskMessageInterface
+class ExceptionResponse extends TaskResponse
 {
-    use TaskMessageTrait;
-
     /**
      * @param string $requestId
      * @param Exception $exception

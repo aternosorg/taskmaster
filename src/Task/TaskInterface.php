@@ -2,9 +2,10 @@
 
 namespace Aternos\Taskmaster\Task;
 
-use Aternos\Taskmaster\Communication\Response\ErrorResponse;
-use Aternos\Taskmaster\Communication\Response\PhpError;
+use Aternos\Taskmaster\Exception\PhpError;
+use Aternos\Taskmaster\Exception\PhpFatalErrorException;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
+use Exception;
 
 /**
  * Interface TaskInterface
@@ -33,17 +34,20 @@ interface TaskInterface
     /**
      * A callback that is executed when the task has a fatal error
      *
-     * The first argument is the {@link ErrorResponse} object.
+     * The first argument is an {@link Exception}.
      * There are different fatal error causes, e.g. a fatal php error, an
-     * uncaught exception or an unexpected worker exit.
+     * unexpected worker exit or an uncaught exception.
+     *
+     * A fatal php error is represented by a {@link PhpFatalErrorException} which contains
+     * a {@link PhpError} object. An unexpected worker exit is represented by a {@link WorkerFailedException}.
      *
      * The {@link TaskInterface::handleResult()} method is not called when this method is called.
      *
-     * @param ErrorResponse $error
+     * @param Exception $error
      * @return void
      */
     #[RunOnParent]
-    public function handleError(ErrorResponse $error): void;
+    public function handleError(Exception $error): void;
 
     /**
      * Get the worker group this tasks should be executed on

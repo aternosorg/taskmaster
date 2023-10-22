@@ -7,11 +7,10 @@ use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Request\RunTaskRequest;
 use Aternos\Taskmaster\Communication\Request\RuntimeReadyRequest;
 use Aternos\Taskmaster\Communication\RequestHandlingTrait;
-use Aternos\Taskmaster\Communication\Response\ErrorResponse;
 use Aternos\Taskmaster\Communication\Response\ExceptionResponse;
 use Aternos\Taskmaster\Communication\Response\TaskResponse;
-use Aternos\Taskmaster\Communication\Response\WorkerFailedResponse;
 use Aternos\Taskmaster\Communication\ResponseInterface;
+use Aternos\Taskmaster\Exception\WorkerFailedException;
 use Aternos\Taskmaster\Task\Synchronized;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Task\TaskMessageInterface;
@@ -115,18 +114,14 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             if ($response instanceof TaskMessageInterface) {
                 $response->applyToTask($this->currentTask);
             }
-            if ($response instanceof ErrorResponse) {
-                $this->currentTask->handleError($response);
-            } else {
-                $this->currentTask->handleResult($response->getData());
-            }
+            $this->currentTask->handleResult($response->getData());
             $this->currentTask = null;
             $this->currentResponsePromise = null;
         })->catch(function (Exception $exception, ResponseInterface $response) {
             if ($response instanceof TaskMessageInterface) {
                 $response->applyToTask($this->currentTask);
             }
-            $this->currentTask->handleError(new ExceptionResponse(0, $exception));
+            $this->currentTask->handleError($exception);
             $this->currentTask = null;
             $this->currentResponsePromise = null;
         });
@@ -145,7 +140,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     /**
      * Handle a fail of the worker instance
      *
-     * If necessary, it resolves the current task response promise with a {@link WorkerFailedResponse}.
+     * If necessary, it resolves the current task response promise with a {@link WorkerFailedException}.
      *
      * @param string|null $reason
      * @return $this
@@ -154,7 +149,8 @@ abstract class WorkerInstance implements WorkerInstanceInterface
     public function handleFail(?string $reason = null): static
     {
         $this->status = WorkerInstanceStatus::FAILED;
-        $this->currentResponsePromise?->resolve(new WorkerFailedResponse($reason));
+        $response = new ExceptionResponse($reason, new WorkerFailedException($reason));
+        $this->currentResponsePromise?->resolve($response);
         $this->stop();
         return $this;
     }

@@ -5,8 +5,8 @@ namespace Aternos\Taskmaster\Task;
 use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\Response\ErrorResponse;
-use Aternos\Taskmaster\Communication\Response\PhpError;
 use Aternos\Taskmaster\Communication\ResponseInterface;
+use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
 use Exception;
@@ -31,7 +31,7 @@ abstract class Task implements TaskInterface
     protected ?RuntimeInterface $runtime = null;
     protected ?string $group = null;
     protected mixed $result = null;
-    protected ?ErrorResponse $error = null;
+    protected ?Exception $error = null;
 
     /**
      * @inheritDoc
@@ -66,10 +66,10 @@ abstract class Task implements TaskInterface
      * If the {@link Task::handleError()} method is overwritten, make sure to
      * call the parent method or set the {@link Task::error} property yourself.
      *
-     * @return ErrorResponse|null
+     * @return Exception|null
      */
     #[RunOnParent]
-    public function getError(): ?ErrorResponse
+    public function getError(): ?Exception
     {
         return $this->error;
     }
@@ -170,10 +170,10 @@ abstract class Task implements TaskInterface
      * @inheritDoc
      */
     #[RunOnParent]
-    public function handleError(ErrorResponse $error): void
+    public function handleError(Exception $error): void
     {
         $this->error = $error;
-        fwrite(STDERR, $error->getError() . PHP_EOL);
+        fwrite(STDERR, $error->getMessage() . PHP_EOL);
     }
 
     /**
