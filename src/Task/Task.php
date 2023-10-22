@@ -237,6 +237,7 @@ abstract class Task implements TaskInterface
      * @inheritDoc
      * @throws Throwable
      */
+    #[OnParent]
     public function getPromise(): TaskPromise
     {
         if ($this->promise === null) {

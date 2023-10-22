@@ -35,6 +35,7 @@ Tasks can communicate back to the main process during execution and handle resul
   * [Defining workers using environment variables](#defining-workers-using-environment-variables)
 * [Running tasks](#running-tasks)
   * [Waiting for tasks to finish](#waiting-for-tasks-to-finish)
+  * [Waiting and handling tasks](#waiting-and-handling-tasks)
   * [Running the update loop manually](#running-the-update-loop-manually)
   * [Stopping the taskmaster](#stopping-the-taskmaster)
 * [Task/worker groups](#taskworker-groups)
@@ -519,13 +520,32 @@ time to add more tasks to avoid any workers being idle.
 
 You should still wait for all tasks to finish using `Taskmaster::wait()` before stopping the taskmaster.
 
+### Waiting and handling tasks
+
+You can also use the `Taskmaster::waitAndHandleTasks()` function to handle tasks when they
+finish instead of waiting for all tasks to finish.
+
+```php
+foreach ($taskmaster->waitAndHandleTasks() as $task) {
+    if ($task->getError()) {
+        echo "Task failed: " . $task->getError()->getMessage() . PHP_EOL;
+    } else {
+        echo "Task finished: " . $task->getResult() . PHP_EOL;
+    }
+}
+```
+
+The `Taskmaster::waitAndHandleTasks()` function returns a generator that yields tasks when they finish.
+You have to iterate over the generator to handle the tasks or the taskmaster will not continue to run.
+
 ### Running the update loop manually
 
-You can also run the update loop manually and do something else between the updates:
+You can also run the update loop manually and do something else between the updates.
+The `Taskmaster::update()` function returns an array of all tasks that finished since the last update.
 
 ```php
 do {
-    $taskmaster->update();
+    $finishedTasks = $taskmaster->update();
     // do something else
 } while ($taskmaster->isRunning());
 ```

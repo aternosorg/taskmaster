@@ -61,7 +61,7 @@ abstract class WorkerTestCase extends TestCase
     public function testGetTaskResultFromPromise(): void
     {
         $task = new AdditionTask(1, 2);
-        $this->taskmaster->runTask($task)->then(function(mixed $result, TaskInterface $resultTask) use($task) {
+        $this->taskmaster->runTask($task)->then(function (mixed $result, TaskInterface $resultTask) use ($task) {
             $this->assertSame($task, $resultTask);
             $this->assertEquals(3, $result);
         });
@@ -77,6 +77,17 @@ abstract class WorkerTestCase extends TestCase
         foreach ($tasks as $task) {
             $this->assertEquals(3, $task->getResult());
         }
+    }
+
+    public function testGetMultipleTasksFromWaitGenerator(): void
+    {
+        $this->addTasks(new AdditionTask(1, 2), 10);
+        $taskCounter = 0;
+        foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
+            $this->assertEquals(3, $task->getResult());
+            $taskCounter++;
+        }
+        $this->assertEquals(10, $taskCounter);
     }
 
     public function testParentCallback(): void
@@ -126,7 +137,7 @@ abstract class WorkerTestCase extends TestCase
     public function testChildExceptionFromPromise(): void
     {
         $task = new ChildExceptionTask("Test");
-        $this->taskmaster->runTask($task)->catch(function(Exception $error, TaskInterface $errorTask) use($task) {
+        $this->taskmaster->runTask($task)->catch(function (Exception $error, TaskInterface $errorTask) use ($task) {
             $this->assertSame($task, $errorTask);
             $this->assertEquals("Test", $error->getMessage());
         });

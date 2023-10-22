@@ -108,4 +108,29 @@ interface TaskInterface
      */
     #[OnParent]
     public function getPromise(): TaskPromise;
+
+    /**
+     * Get the task result after the task has finished
+     *
+     * The task result is the return value of the {@link TaskInterface::run()} method.
+     * If the {@link TaskInterface::handleResult()} method is overwritten, make sure to
+     * call the parent method or set the {@link TaskInterface::result} property yourself.
+     *
+     * @return mixed
+     */
+    #[OnParent]
+    public function getResult(): mixed;
+
+    /**
+     * Get the task error after the task has finished
+     *
+     * The task error is an error caused in the {@link TaskInterface::run()} method or
+     * an unexpected worker exit.
+     * If the {@link TaskInterface::handleError()} method is overwritten, make sure to
+     * call the parent method or set the {@link TaskInterface::error} property yourself.
+     *
+     * @return Exception|null
+     */
+    #[OnParent]
+    public function getError(): ?Exception;
 }

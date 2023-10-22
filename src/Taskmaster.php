@@ -17,6 +17,7 @@ use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Worker\SocketWorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 use Aternos\Taskmaster\Worker\WorkerStatus;
+use Generator;
 
 /**
  * Class Taskmaster
@@ -40,6 +41,11 @@ class Taskmaster
      * @var TaskInterface[]
      */
     protected array $tasks = [];
+
+    /**
+     * @var TaskInterface[]
+     */
+    protected array $finishedTasks = [];
 
     /**
      * @var WorkerInterface[]
@@ -78,7 +84,24 @@ class Taskmaster
     public function runTask(TaskInterface $task): TaskPromise
     {
         $this->tasks[] = $task;
+        $task->getPromise()
+            ->then($this->handleTaskResult(...))
+            ->catch($this->handleTaskResult(...));
         return $task->getPromise();
+    }
+
+    /**
+     * Handle task results (success or error)
+     *
+     * Adds all tasks temporarily to the finished tasks list to be returned by {@link Taskmaster::update()}.
+     *
+     * @param mixed $resultOrError
+     * @param TaskInterface $task
+     * @return void
+     */
+    protected function handleTaskResult(mixed $resultOrError, TaskInterface $task): void
+    {
+        $this->finishedTasks[] = $task;
     }
 
     /**
@@ -125,6 +148,24 @@ class Taskmaster
             $this->update();
         } while (count($this->getTasks()) > 0);
         return $this;
+    }
+
+    /**
+     * Run the update cycle until all tasks are finished
+     *
+     * Same as {@link Taskmaster::wait()} but yields the finished tasks after each update.
+     * You have to iterate the generator to keep running tasks.
+     *
+     * The tasks can be successfully finished or failed, use {@link TaskInterface::getResult()} and
+     * {@link TaskInterface::getError()} to check the status.
+     *
+     * @return Generator<TaskInterface>
+     */
+    public function waitAndHandleTasks(): Generator
+    {
+        do {
+            yield from $this->update();
+        } while ($this->isWorking());
     }
 
     /**
@@ -182,9 +223,11 @@ class Taskmaster
      *
      * This method also waits a little bit if there are no workers that need to be updated to reduce CPU load.
      *
-     * @return void
+     * Returns all finished tasks since the last update.
+     *
+     * @return TaskInterface[]
      */
-    public function update(): void
+    public function update(): array
     {
         foreach ($this->workers as $worker) {
             $this->assignNextTaskToWorkerIfPossible($worker);
@@ -195,6 +238,10 @@ class Taskmaster
             $proxy->update();
         }
         $this->waitForNewUpdate();
+
+        $finishedTasks = $this->finishedTasks;
+        $this->finishedTasks = [];
+        return $finishedTasks;
     }
 
     /**
