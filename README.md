@@ -5,6 +5,9 @@ Taskmaster is an object-oriented PHP library for running tasks in parallel.
 A task can be written in a few lines of code and then executed in different environments, e.g. in a
 forked process, a new process, a thread or just synchronous in the same process without changing any code.
 
+Therefore, this library can run without any extensions that aren't part of the PHP core, but it's also
+possible to use the advantages of advanced extensions such as `pcntl` or `parallel` if they are available.
+
 It's even possible to proxy the creation of the environment through a proxy process that uses a different
 PHP binary/installation with different extensions. This allows using the advantages of the different
 strategies even in environments where this would not be possible otherwise, e.g. using forked processes
@@ -100,6 +103,9 @@ resources. They can define those fields when the task is executed in the run fun
 The run function is called when the task is executed. It's the only required function for
 a task. It can return a value that is passed back to the main process and can be handled by
 defining a `Task::handleResult(mixed $result)` function in your task.
+
+In all current workers, the input/output streams are connected to the main process, so
+you can use `echo` and `STDERR` to output something in your `run()` function at any time.
 
 ### Call back to the main process
 
@@ -334,6 +340,9 @@ class SleepTaskFactory extends \Aternos\Taskmaster\Task\TaskFactory
 
 $taskmaster->addTaskFactory(new SleepTaskFactory());
 ```
+
+You could use the promise returned from `Task::getPromise()` to also handle success and 
+failure of tasks in your task factory as well.
 
 You can also use the existing [`IteratorTaskFactory`](src/Task/IteratorTaskFactory.php) that creates tasks from an
 iterator.
