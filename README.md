@@ -37,6 +37,9 @@ Tasks can communicate back to the main process during execution and handle resul
   * [Defining workers automatically](#defining-workers-automatically)
   * [Defining workers using environment variables](#defining-workers-using-environment-variables)
 * [Running tasks](#running-tasks)
+  * [Configuring the taskmaster](#configuring-the-taskmaster)
+    * [Bootstrap file](#bootstrap-file)
+    * [PHP executable](#php-executable)
   * [Waiting for tasks to finish](#waiting-for-tasks-to-finish)
   * [Waiting and handling tasks](#waiting-and-handling-tasks)
   * [Running the update loop manually](#running-the-update-loop-manually)
@@ -71,10 +74,6 @@ class SleepTask extends \Aternos\Taskmaster\Task\Task {
 
 // The taskmaster object holds tasks and workers
 $taskmaster = new \Aternos\Taskmaster\Taskmaster();
-
-// Set the bootstrap/autoloading file for new processes
-// Taskmaster will try to automatically detect the correct composer autoloader if this is not set
-$taskmaster->setBootstrap(__DIR__ . '/vendor/autoload.php');
 
 // Set up the workers automatically
 $taskmaster->autoDetectWorkers(4);
@@ -507,6 +506,35 @@ $taskmaster->autoDetectWorkers(4, true, false);
 After writing your tasks, creating them and defining the workers, you can start running the tasks.
 You don't have to explicitly start the taskmaster, just running the update loop through the wait
 functions or manually is enough. Workers and proxies are started when necessary.
+
+### Configuring the taskmaster
+
+Besides configuring workers and proxies directly, you can also configure the default [`TaskmasterOptions`](src/TaskmasterOptions.php)
+on the taskmaster object. Those options are used for all workers and proxies that don't have their own options.
+
+#### Bootstrap file
+
+The bootstrap file is used to autoload classes in the worker process. This isn't used by every
+worker, e.g. the [`SyncWorker`](src/Environment/Sync/SyncWorker.php) and the [`ForkWorker`](src/Environment/Fork/ForkWorker.php)
+don't need this, but the [`ProcessWorker`](src/Environment/Process/ProcessWorker.php) does.
+
+```php
+$taskmaster->setBootstrap(__DIR__ . '/vendor/autoload.php');
+```
+
+If this is not set, Taskmaster tries to find the composer autoloader automatically.
+
+#### PHP executable
+
+The PHP executable is used to run the worker process. This is currently only used by the
+[`ProcessWorker`](src/Environment/Process/ProcessWorker.php) and the [`ProcessProxy`](src/Proxy/ProcessProxy.php).
+
+
+```php
+$taskmaster->setPhpExecutable('/usr/bin/php');
+```
+
+The default value for the PHP executable is simply `php`.
 
 ### Waiting for tasks to finish
 
