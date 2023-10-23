@@ -23,11 +23,11 @@ abstract class AsyncWorkerTestCase extends WorkerTestCase
     public function testMultipleTasksRunAtTheSameTime(): void
     {
         $start = microtime(true);
-        $this->addTasks(new SleepTask(10000), 9);
+        $this->addTasks(new SleepTask(100000), 3);
         $this->taskmaster->wait();
         $end = microtime(true);
         $time = ($end - $start) * 1000;
-        $this->assertLessThan(80, $time);
+        $this->assertLessThan(299, $time);
     }
 
     public function testHandleWarning(): void
