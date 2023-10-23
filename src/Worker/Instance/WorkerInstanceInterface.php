@@ -9,6 +9,7 @@ use Aternos\Taskmaster\Exception\WorkerFailedException;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
+use Exception;
 use Throwable;
 
 /**
@@ -92,11 +93,12 @@ interface WorkerInstanceInterface extends CommunicatorInterface
     /**
      * Handle a fail of the worker instance
      *
-     * If necessary, it resolves the current task response promise with a {@link WorkerFailedException}.
+     * If necessary, it resolves the current task response promise with a {@link WorkerFailedException} or
+     * with the exception provided.
      *
-     * @param string|null $reason
+     * @param string|Exception|null $reason
      * @return $this
      * @throws Throwable
      */
-    public function handleFail(?string $reason = null): static;
+    public function handleFail(null|string|Exception $reason = null): static;
 }

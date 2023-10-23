@@ -35,6 +35,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
 
     protected WorkerInstanceStatus $status = WorkerInstanceStatus::CREATED;
     protected ?TaskInterface $currentTask = null;
+    protected float $currentTaskStartTime = 0;
     protected ?ResponsePromise $currentResponsePromise = null;
 
     /**
@@ -110,6 +111,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      */
     protected function sendRunTaskRequest(RunTaskRequest $request): TaskPromise
     {
+        $this->currentTaskStartTime = microtime(true);
         $responsePromise = $this->sendRequest($request);
         $this->currentResponsePromise = $responsePromise;
         $responsePromise->then(function (ResponseInterface $response) {
@@ -119,6 +121,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             $this->currentTask->handleResult($response->getData());
             $this->currentTask = null;
             $this->currentResponsePromise = null;
+            $this->currentTaskStartTime = 0;
         })->catch(function (Exception $exception, ResponseInterface $response) {
             if ($response instanceof TaskMessageInterface) {
                 $response->applyToTask($this->currentTask);
@@ -126,6 +129,7 @@ abstract class WorkerInstance implements WorkerInstanceInterface
             $this->currentTask->handleError($exception);
             $this->currentTask = null;
             $this->currentResponsePromise = null;
+            $this->currentTaskStartTime = 0;
         });
         return $request->getTask()->getPromise()->setResponsePromise($responsePromise);
     }
@@ -143,14 +147,17 @@ abstract class WorkerInstance implements WorkerInstanceInterface
      *
      * If necessary, it resolves the current task response promise with a {@link WorkerFailedException}.
      *
-     * @param string|null $reason
+     * @param string|Exception|null $reason
      * @return $this
      * @throws Throwable
      */
-    public function handleFail(?string $reason = null): static
+    public function handleFail(null|string|Exception $reason = null): static
     {
         $this->status = WorkerInstanceStatus::FAILED;
-        $response = new ExceptionResponse($reason, new WorkerFailedException($reason));
+        if (!$reason instanceof Exception) {
+            $reason = new WorkerFailedException($reason);
+        }
+        $response = new ExceptionResponse("", $reason);
         $this->currentResponsePromise?->resolve($response);
         $this->stop();
         return $this;

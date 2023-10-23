@@ -63,6 +63,7 @@ class Taskmaster
     protected array $taskFactories = [];
 
     protected TaskmasterOptions $options;
+    protected float $defaultTaskTimeout = 0;
 
     /**
      * Taskmaster constructor
@@ -255,6 +256,9 @@ class Taskmaster
         $task = $this->getNextTask($worker->getGroup());
         if (!$task) {
             return;
+        }
+        if ($task->getTimeout() === null) {
+            $task->setTimeout($this->defaultTaskTimeout);
         }
         $task->getPromise()
             ->then($this->handleTaskResult(...))
@@ -534,6 +538,26 @@ class Taskmaster
     public function setPhpExecutable(string $phpExecutable): static
     {
         $this->options->setPhpExecutable($phpExecutable);
+        return $this;
+    }
+
+    /**
+     * Set the default task timeout
+     *
+     * Tasks can specify their own timeout, see {@link TaskInterface::getTimeout()}.
+     * If the timeout is set to null, the default task timeout set here is used.
+     *
+     * Setting the default task timeout to 0 will disable the timeout.
+     *
+     * @param float $timeout
+     * @return $this
+     */
+    public function setDefaultTaskTimeout(float $timeout): static
+    {
+        if ($timeout < 0) {
+            $timeout = 0;
+        }
+        $this->defaultTaskTimeout = $timeout;
         return $this;
     }
 

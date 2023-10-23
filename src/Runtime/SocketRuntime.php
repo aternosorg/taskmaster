@@ -11,6 +11,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Exception\PhpFatalErrorException;
 use Aternos\Taskmaster\Taskmaster;
+use Exception;
 
 /**
  * Class SocketRuntime
@@ -92,8 +93,11 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
     /**
      * @inheritDoc
      */
-    protected function handleFail(?string $reason = null): static
+    protected function handleFail(null|string|Exception $reason = null): static
     {
+        if ($reason instanceof Exception) {
+            $reason = $reason->getMessage();
+        }
         fwrite(STDERR, "Runtime failed: " . $reason . PHP_EOL);
         exit(1);
     }

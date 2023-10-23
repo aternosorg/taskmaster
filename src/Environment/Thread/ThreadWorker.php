@@ -12,6 +12,7 @@ use Aternos\Taskmaster\Worker\SocketWorker;
  * NOTE: This worker is considered experimental and not recommended for production use.
  *       The parallel extension requires a thread safe PHP build and can cause unexpected behavior.
  *       Using {@link exit()} or causing a fatal error in a task can lead to a segfault.
+ *       Internal function calls cannot be killed, e.g. due to a timeout.
  *
  * The thread worker starts the thread runtime in a separate thread using the parallel extension.
  * The parallel extension is required for this worker.

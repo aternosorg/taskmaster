@@ -139,9 +139,22 @@ abstract class WorkerTestCase extends TestCase
         $task = new ChildExceptionTask("Test");
         $this->taskmaster->runTask($task)->catch(function (Exception $error, TaskInterface $errorTask) use ($task) {
             $this->assertSame($task, $errorTask);
+            $this->assertInstanceOf(Exception::class, $task->getError());
             $this->assertEquals("Test", $error->getMessage());
         });
         $this->taskmaster->wait();
+    }
+
+    public function testChildExceptionFromWaitGenerator(): void
+    {
+        $this->addTasks(new ChildExceptionTask("Test"), 10);
+        $taskCounter = 0;
+        foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
+            $this->assertInstanceOf(Exception::class, $task->getError());
+            $this->assertEquals("Test", $task->getError()->getMessage());
+            $taskCounter++;
+        }
+        $this->assertEquals(10, $taskCounter);
     }
 
     public function testParentException(): void

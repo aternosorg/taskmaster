@@ -12,6 +12,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Runtime\RuntimeProcess;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
+use Exception;
 use Throwable;
 
 /**
@@ -101,7 +102,7 @@ class ProcessProxy extends Proxy
     /**
      * @inheritDoc
      */
-    protected function handleFail(?string $reason = null): static
+    protected function handleFail(null|string|Exception $reason = null): static
     {
         $this->status = ProxyStatus::FAILED;
         return $this;

@@ -133,4 +133,25 @@ interface TaskInterface
      */
     #[OnParent]
     public function getError(): ?Exception;
+
+    /**
+     * Get the current timeout for this task in seconds
+     *
+     * Decimals are allowed for sub-second timeouts.
+     * 0 means no timeout, null means default timeout should be used
+     *
+     * @return float|null
+     */
+    public function getTimeout(): ?float;
+
+    /**
+     * Set the timeout for this task in seconds
+     *
+     * Decimals are allowed for sub-second timeouts.
+     * 0 means no timeout, null means default timeout should be used
+     *
+     * @param float|null $timeout
+     * @return $this
+     */
+    public function setTimeout(?float $timeout): static;
 }

@@ -34,6 +34,7 @@ abstract class Task implements TaskInterface
     #[OnParent] protected mixed $result = null;
     #[OnParent] protected ?Exception $error = null;
     #[OnParent] protected ?TaskPromise $promise = null;
+    #[OnParent] protected ?float $timeout = null;
 
     /**
      * @inheritDoc
@@ -244,5 +245,22 @@ abstract class Task implements TaskInterface
             $this->promise = new TaskPromise($this);
         }
         return $this->promise;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getTimeout(): ?float
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setTimeout(?float $timeout): static
+    {
+        $this->timeout = $timeout;
+        return $this;
     }
 }

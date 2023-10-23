@@ -8,6 +8,9 @@ use Exception;
 use Fiber;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionIntersectionType;
+use ReflectionType;
+use ReflectionUnionType;
 use RuntimeException;
 use Throwable;
 
@@ -157,7 +160,47 @@ class Promise
         if ($type === null) {
             return true;
         }
-        return is_a($exception, $type->getName());
+        return $this->matchesType($exception, $type);
+    }
+
+    /**
+     * Check if the given object matches the given type
+     *
+     * Resolves union and intersection types recursively
+     *
+     * @param Exception $object
+     * @param ReflectionType $type
+     * @return bool
+     */
+    protected function matchesType(Exception $object, ReflectionType $type): bool
+    {
+        if ($type instanceof ReflectionUnionType) {
+            foreach ($type->getTypes() as $unionType) {
+                if ($this->matchesType($object, $unionType)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if ($type instanceof ReflectionIntersectionType) {
+            foreach ($type->getTypes() as $intersectionType) {
+                if (!$this->matchesType($object, $intersectionType)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        if ($type instanceof \ReflectionNamedType) {
+            if ($type->getName() === "mixed" || $type->getName() === "object") {
+                return true;
+            }
+
+            return is_a($object, $type->getName());
+        }
+
+        return false;
     }
 
     /**

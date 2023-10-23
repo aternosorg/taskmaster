@@ -232,6 +232,22 @@ $taskmaster->runTask(new SleepTask())->then(function(mixed $result, TaskInterfac
 });
 ```
 
+### Timeout
+
+You can define a timeout for a task using the `Task::setTimeout(?float $timeout)` function or by
+overriding the `Task::getTimeout()` function. `0` means no timeout, `null` means the default timeout
+is set by the taskmaster defined by `Taskmaster::setDefaultTaskTimeout(float $timeout)`. The timeout
+is set in seconds and can be a float value down to microseconds.
+
+If the task takes longer than the timeout, a [`TaskTimeoutException`](src/Exception/TaskTimeoutException.php)
+is thrown.
+
+Timeouts are only used in asynchronous workers, with a [`SyncWorker`](src/Environment/Sync/SyncWorker.php)
+the task is executed synchronously and therefore the timeout is not used.
+
+Timeouts are not exact, they are evaluated in every update interval of the taskmaster. Therefore, the
+task can take a little longer than the timeout.
+
 ### Handling errors
 
 #### Critical errors
@@ -239,9 +255,10 @@ $taskmaster->runTask(new SleepTask())->then(function(mixed $result, TaskInterfac
 The `handleError` function is called when the task caused a fatal unrecoverable error. The first
 parameter is an `Exception` that is thrown by the task or by this library.
 
-The two special exception thrown by this library are the [`PhpFatalErrorException`](src/Exception/PhpFatalErrorException.php)
-cause by a fatal PHP error and the [`WorkerFailedException`](src/Exception/WorkerFailedException.php) that is thrown
-when the worker process exited unexpectedly.
+The two three exception thrown by this library are the [`PhpFatalErrorException`](src/Exception/PhpFatalErrorException.php)
+cause by a fatal PHP error, the [`WorkerFailedException`](src/Exception/WorkerFailedException.php) that is thrown
+when the worker process exited unexpectedly and the [`TaskTimeoutException`](src/Exception/TaskTimeoutException.php)
+that is thrown when the task takes longer than the timeout.
 
 PHP fatal errors can only be caught if they were caused in a separate process, e.g. when using
 the [`ForkWorker`](src/Environment/Fork/ForkWorker.php) or the [`ProcessWorker`](src/Environment/Process/ProcessWorker.php). 
@@ -250,6 +267,9 @@ It's not recommended to rely on this.
 If a worker fails and the task gets a [`WorkerFailedException`](src/Exception/WorkerFailedException.php),
 it is possible that this was not caused by the task itself and therefore a retry of the task might be possible.
 This should be limited to a few retries to prevent endless loops.
+
+The [`TaskTimeoutException`](src/Exception/TaskTimeoutException.php) is thrown when the task takes longer than the timeout defined 
+by `Task::getTimeout()` or the default defined by `Taskmaster::setDefaultTaskTimeout()`.
 
 The default error handler implementation in the [`Task`](src/Task/Task.php) class stores the error in
 the task object for later access using the `Task::getError()` function and writes the error message to `STDERR`.

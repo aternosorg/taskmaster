@@ -9,6 +9,7 @@ use Aternos\Taskmaster\Communication\RequestInterface;
 use Aternos\Taskmaster\Communication\ResponseInterface;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
+use Exception;
 use Throwable;
 
 /**
@@ -96,10 +97,10 @@ trait SocketCommunicatorTrait
     /**
      * Handle a failed socket communication
      *
-     * @param string|null $reason
+     * @param string|Exception|null $reason
      * @return $this
      */
-    abstract protected function handleFail(?string $reason = null): static;
+    abstract protected function handleFail(null|string|Exception $reason = null): static;
 
     /**
      * Handle a request

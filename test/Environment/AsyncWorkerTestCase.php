@@ -3,7 +3,9 @@
 namespace Aternos\Taskmaster\Test\Environment;
 
 use Aternos\Taskmaster\Exception\PhpError;
+use Aternos\Taskmaster\Exception\TaskTimeoutException;
 use Aternos\Taskmaster\Taskmaster;
+use Aternos\Taskmaster\Test\Task\InterruptableSleepTask;
 use Aternos\Taskmaster\Test\Task\SleepTask;
 use Aternos\Taskmaster\Test\Task\WarningTask;
 use Aternos\Taskmaster\Worker\WorkerInterface;
@@ -40,5 +42,34 @@ abstract class AsyncWorkerTestCase extends WorkerTestCase
             $this->assertEquals(E_USER_WARNING, $task->getPhpError()->getLevel());
             $this->assertEquals("Warning", $task->getPhpError()->getLevelString());
         }
+    }
+
+    public function testDefaultTimeout(): void
+    {
+        $this->taskmaster->setDefaultTaskTimeout(0.005);
+        $tasks = $this->addTasks(new InterruptableSleepTask(10000), 3);
+        $this->taskmaster->wait();
+        foreach ($tasks as $task) {
+            $this->assertInstanceOf(TaskTimeoutException::class, $task->getError());
+        }
+    }
+
+    public function testRecoverAfterTimeout(): void
+    {
+        $this->taskmaster->setDefaultTaskTimeout(0.005);
+        $this->addTasks(new InterruptableSleepTask(10000), 3);
+        $this->addTasks(new InterruptableSleepTask(1000), 3);
+
+        $counter = 0;
+        foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
+            $counter++;
+            $this->assertInstanceOf(InterruptableSleepTask::class, $task);
+            if ($task->microseconds === 10000) {
+                $this->assertInstanceOf(TaskTimeoutException::class, $task->getError());
+            } else {
+                $this->assertNull($task->getError());
+            }
+        }
+        $this->assertEquals(6, $counter);
     }
 }

@@ -16,6 +16,7 @@ use Aternos\Taskmaster\Runtime\AsyncRuntimeInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
 use Aternos\Taskmaster\Worker\Instance\SocketWorkerInstanceInterface;
+use Exception;
 
 /**
  * Class ProxyRuntime
@@ -238,8 +239,11 @@ class ProxyRuntime implements AsyncRuntimeInterface
     /**
      * @inheritDoc
      */
-    protected function handleFail(?string $reason = null): static
+    protected function handleFail(null|string|Exception $reason = null): static
     {
+        if ($reason instanceof Exception) {
+            $reason = $reason->getMessage();
+        }
         fwrite(STDERR, "Proxy runtime failed: " . $reason . PHP_EOL);
         exit(1);
     }
