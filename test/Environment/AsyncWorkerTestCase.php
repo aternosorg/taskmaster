@@ -56,15 +56,15 @@ abstract class AsyncWorkerTestCase extends WorkerTestCase
 
     public function testRecoverAfterTimeout(): void
     {
-        $this->taskmaster->setDefaultTaskTimeout(0.005);
-        $this->addTasks(new InterruptableSleepTask(10000), 3);
+        $this->taskmaster->setDefaultTaskTimeout(0.05);
+        $this->addTasks(new InterruptableSleepTask(100000), 3);
         $this->addTasks(new InterruptableSleepTask(1000), 3);
 
         $counter = 0;
         foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
             $counter++;
             $this->assertInstanceOf(InterruptableSleepTask::class, $task);
-            if ($task->microseconds === 10000) {
+            if ($task->microseconds === 100000) {
                 $this->assertInstanceOf(TaskTimeoutException::class, $task->getError());
             } else {
                 $this->assertNull($task->getError());
