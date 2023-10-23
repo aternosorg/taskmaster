@@ -24,6 +24,7 @@ Tasks can communicate back to the main process during execution and handle resul
   * [Child/parent attributes](#childparent-attributes)
     * [Synchronized properties](#synchronized-properties)
   * [Handling the result](#handling-the-result)
+  * [Timeout](#timeout)
   * [Handling errors](#handling-errors)
     * [Critical errors](#critical-errors)
     * [Uncritical errors](#uncritical-errors)
@@ -210,8 +211,9 @@ The result of this task is `6` because the `counter` property is synchronized an
 
 ### Handling the result
 
-The `handleResult` function is called when the task returns a value. It can be used to handle
-the result of the task. It's not required to define this function.
+The `Task::handleResult()` function is called when the task returns a value. It can be used to handle
+the result of the task. You can override this function to implement your own result handler.
+It is not required to define this function.
 
 The first parameter is the result of the task or `null` if the task did not return a value.
 The default implementation in the [`Task`](src/Task/Task.php) class just stores the result in
@@ -252,10 +254,11 @@ task can take a little longer than the timeout.
 
 #### Critical errors
 
-The `handleError` function is called when the task caused a fatal unrecoverable error. The first
-parameter is an `Exception` that is thrown by the task or by this library.
+The `Task::handleError()` function is called when the task caused a fatal unrecoverable error. The first
+parameter is an `Exception` that is thrown by the task or by this library. You can override this function
+to implement your own error handler.
 
-The two three exception thrown by this library are the [`PhpFatalErrorException`](src/Exception/PhpFatalErrorException.php)
+The three exception thrown by this library are the [`PhpFatalErrorException`](src/Exception/PhpFatalErrorException.php)
 cause by a fatal PHP error, the [`WorkerFailedException`](src/Exception/WorkerFailedException.php) that is thrown
 when the worker process exited unexpectedly and the [`TaskTimeoutException`](src/Exception/TaskTimeoutException.php)
 that is thrown when the task takes longer than the timeout.
@@ -290,7 +293,8 @@ $taskmaster->runTask(new SleepTask())->catch(function(Exception $error, TaskInte
 
 #### Uncritical errors
 
-The `handleUncriticalError` function is called when the task caused an uncritical error, e.g. a PHP warning.
+The `Task::handleUncriticalError()` function is called when the task caused an uncritical error, e.g. a PHP warning.
+You can override this function to implement your own error handler.
 The first parameter is a [`PhpError`](src/Communication/Response/PhpError.php) object that contains the error
 details. The function should return `true` if the error was handled or `false` (default) if the PHP error
 handler should continue (usually by logging/outputting the error).
