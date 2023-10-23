@@ -21,7 +21,7 @@ trait ProxiedWorkerTestTrait
     public function testTasksFailOnProxyDeath(): void
     {
         /** @var SleepStatusTask $tasks */
-        $tasks = $this->addTasks(new SleepStatusTask(10000), 3);
+        $tasks = $this->addTasks(new SleepStatusTask(100000), 3);
         do {
             $this->taskmaster->update();
             $runningTasks = 0;
@@ -43,7 +43,7 @@ trait ProxiedWorkerTestTrait
     public function testProxyRestartsAfterFail(): void
     {
         /** @var SleepStatusTask $tasks */
-        $tasks = $this->addTasks(new SleepStatusTask(10000), 6);
+        $tasks = $this->addTasks(new SleepStatusTask(100000), 6);
         do {
             $this->taskmaster->update();
             $runningTasks = 0;
