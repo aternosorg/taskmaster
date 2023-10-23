@@ -90,8 +90,8 @@ $taskmaster->wait()->stop();
 
 ## Writing tasks
 
-A task is a class, it is recommended to extend the [`Task`](src/Task/Task.php) class, but implementing
-the [`TaskInterface`](src/Task/TaskInterface.php) is also possible.
+A task is an instance of a class. When writing your own task class, it is recommended to extend the [`Task`](src/Task/Task.php) class, 
+but implementing the [`TaskInterface`](src/Task/TaskInterface.php) is also possible.
 
 A class must define a run function and has some optional functions such as error handlers.
 
