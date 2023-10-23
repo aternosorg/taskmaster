@@ -84,6 +84,7 @@ trait SocketCommunicatorTrait
                 }
                 if ($message instanceof ResponseInterface) {
                     $this->promises[$message->getRequestId()]->resolve($message);
+                    unset($this->promises[$message->getRequestId()]);
                 }
             }
         } catch (SocketReadException $e) {

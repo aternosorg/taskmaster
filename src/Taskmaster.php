@@ -84,9 +84,6 @@ class Taskmaster
     public function runTask(TaskInterface $task): TaskPromise
     {
         $this->tasks[] = $task;
-        $task->getPromise()
-            ->then($this->handleTaskResult(...))
-            ->catch($this->handleTaskResult(...));
         return $task->getPromise();
     }
 
@@ -259,6 +256,9 @@ class Taskmaster
         if (!$task) {
             return;
         }
+        $task->getPromise()
+            ->then($this->handleTaskResult(...))
+            ->catch($this->handleTaskResult(...));
         $worker->assignTask($task);
     }
 
