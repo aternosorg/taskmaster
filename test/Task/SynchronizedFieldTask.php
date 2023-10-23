@@ -32,13 +32,12 @@ class SynchronizedFieldTask extends Task
      * @throws Throwable
      */
     #[OnChild]
-    public function run(): null
+    public function run(): void
     {
         for ($i = 0; $i < $this->amount; $i++) {
             $this->increaseCounter();
             $this->call($this->increaseCounter(...));
         }
-        return null;
     }
 
     /**
