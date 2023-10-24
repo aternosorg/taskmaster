@@ -11,7 +11,7 @@ namespace Aternos\Taskmaster\Communication;
  */
 class Request extends Message implements RequestInterface
 {
-    protected ?string $requestId = null;
+    protected string $requestId;
 
     /**
      * Request constructor.
