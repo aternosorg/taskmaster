@@ -20,7 +20,7 @@ class Socket implements SocketInterface, SelectableSocketInterface
     /**
      * @var resource
      */
-    protected $socket;
+    protected mixed $socket;
 
     /**
      * @param resource|Socket $socket
