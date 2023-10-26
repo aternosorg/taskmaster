@@ -5,8 +5,11 @@
          colors="true"
          testdox="true">
     <testsuites>
-        <testsuite name="environment">
-            <directory>test/Environment/</directory>
+        <testsuite name="integration">
+            <directory>test/Integration/</directory>
+        </testsuite>
+        <testsuite name="unit">
+            <directory>test/Unit/</directory>
         </testsuite>
     </testsuites>
     <source>

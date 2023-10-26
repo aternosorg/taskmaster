@@ -209,6 +209,25 @@ class SynchronizedFieldTask extends \Aternos\Taskmaster\Task\Task
 
 The result of this task is `6` because the `counter` property is synchronized and increased on both sides.
 
+### Serialization in other classes
+The [`OnParent`](src/Task/OnParent.php), [`OnChild`](src/Task/OnChild.php) and [`OnBoth`](src/Task/OnBoth.php) 
+attributes are only available in your [`Task`](src/Task/Task.php) class. If other objects are serialized but
+contain properties that should not be serialized, you can use the 
+[`SerializationTrait`](src/Communication/Serialization/SerializationTrait.php) in your class
+and then add the [`Serializable`](src/Communication/Serialization/Serializable.php) or [`NotSerializable`](src/Communication/Serialization/NotSerializable.php)
+attributes to your properties.
+
+You can use the [`Serializable`](src/Communication/Serialization/Serializable.php) attribute to mark properties that should be serialized.
+When using only the [`Serializable`](src/Communication/Serialization/Serializable.php) attribute, all properties that are not marked with the
+[`Serializable`](src/Communication/Serialization/Serializable.php) attribute will be ignored.
+
+You can use the [`NotSerializable`](src/Communication/Serialization/NotSerializable.php) attribute to mark properties that should not be serialized.
+When using only the [`NotSerializable`](src/Communication/Serialization/NotSerializable.php) attribute, all properties that are not marked with the
+[`NotSerializable`](src/Communication/Serialization/NotSerializable.php) attribute will be serialized.
+
+When using both attributes, all properties **must** be marked with either the [`Serializable`](src/Communication/Serialization/Serializable.php) 
+or [`NotSerializable`](src/Communication/Serialization/NotSerializable.php) attribute, otherwise an exception will be thrown.
+
 ### Handling the result
 
 The `Task::handleResult()` function is called when the task returns a value. It can be used to handle

@@ -17,6 +17,9 @@ jobs:
 
     name: Run tests on PHP v${{ matrix.php-version }}
 
+    env:
+      TASKMASTER_TEST_TIME_FACTOR: 100
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
