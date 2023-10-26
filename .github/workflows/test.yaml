@@ -45,4 +45,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run phpunit tests
-        run: vendor/bin/phpunit --colors=always --testdox
+        run: composer test
+
+      - name: Run phpbench tests
+        run: composer bench
