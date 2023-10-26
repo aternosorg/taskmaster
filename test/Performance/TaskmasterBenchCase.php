@@ -20,6 +20,7 @@ abstract class TaskmasterBenchCase
         $taskmaster->addWorkers($worker, $count);
         $this->setupTasks($taskmaster);
         $taskmaster->wait();
+        $taskmaster->stop();
     }
 
     public function benchSync(): void
