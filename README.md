@@ -23,6 +23,7 @@ Tasks can communicate back to the main process during execution and handle resul
   * [Call back to the main process](#call-back-to-the-main-process)
   * [Child/parent attributes](#childparent-attributes)
     * [Synchronized properties](#synchronized-properties)
+  * [Serialization in other classes](#serialization-in-other-classes)
   * [Handling the result](#handling-the-result)
   * [Timeout](#timeout)
   * [Handling errors](#handling-errors)
