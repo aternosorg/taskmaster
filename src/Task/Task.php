@@ -35,6 +35,7 @@ abstract class Task implements TaskInterface
     #[OnParent] protected ?Exception $error = null;
     #[OnParent] protected ?TaskPromise $promise = null;
     #[OnParent] protected ?float $timeout = null;
+    #[OnChild] protected bool $sync = false;
 
     /**
      * @inheritDoc
@@ -262,5 +263,28 @@ abstract class Task implements TaskInterface
     {
         $this->timeout = $timeout;
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setSync(bool $sync = true): static
+    {
+        $this->sync = $sync;
+        return $this;
+    }
+
+    /**
+     * Check if the task is executed in a sync environment
+     *
+     * Some cases must be handled differently in a sync environment because
+     * you are operating on the same and not just equal objects, e.g. you
+     * might not want to close file handles that are still used by other tasks.
+     *
+     * @return bool
+     */
+    protected function isSync(): bool
+    {
+        return $this->sync;
     }
 }

@@ -24,6 +24,7 @@ Tasks can communicate back to the main process during execution and handle resul
   * [Child/parent attributes](#childparent-attributes)
     * [Synchronized properties](#synchronized-properties)
   * [Serialization in other classes](#serialization-in-other-classes)
+  * [Synchronous environment](#synchronous-environment)
   * [Handling the result](#handling-the-result)
   * [Timeout](#timeout)
   * [Handling errors](#handling-errors)
@@ -228,6 +229,13 @@ When using only the [`NotSerializable`](src/Communication/Serialization/NotSeria
 
 When using both attributes, all properties **must** be marked with either the [`Serializable`](src/Communication/Serialization/Serializable.php) 
 or [`NotSerializable`](src/Communication/Serialization/NotSerializable.php) attribute, otherwise an exception will be thrown.
+
+### Synchronous environment
+
+In some cases special handling is required when the task is executed in a synchronous environment
+using the [`SyncWorker`](src/Environment/Sync/SyncWorker.php), e.g. you might not want to close 
+file handles that are still used by other tasks. The `Task::isSync()` function can
+be used to check if the task is being executed synchronously.
 
 ### Handling the result
 

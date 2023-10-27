@@ -8,6 +8,7 @@ use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Util\Task\EmptyTask;
 use Aternos\Taskmaster\Test\Util\Task\InterruptableSleepTask;
 use Aternos\Taskmaster\Test\Util\Task\SleepTask;
+use Aternos\Taskmaster\Test\Util\Task\SyncTask;
 use Aternos\Taskmaster\Test\Util\Task\WarningTask;
 use Aternos\Taskmaster\Worker\WorkerInterface;
 
@@ -54,6 +55,14 @@ abstract class AsyncWorkerTestCase extends WorkerTestCase
         foreach ($tasks as $task) {
             $this->assertInstanceOf(TaskTimeoutException::class, $task->getError());
         }
+    }
+
+    public function testSyncTask(): void
+    {
+        $task = new SyncTask();
+        $this->taskmaster->runTask($task);
+        $this->taskmaster->wait();
+        $this->assertFalse($task->getResult());
     }
 
     public function testRecoverAfterTimeout(): void

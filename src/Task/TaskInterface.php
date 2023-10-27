@@ -154,4 +154,15 @@ interface TaskInterface
      * @return $this
      */
     public function setTimeout(?float $timeout): static;
+
+    /**
+     * Tell the task that it's being executed in a sync environment
+     *
+     * Some cases must be handled differently in a sync environment because
+     * you are operating on the same and not just equal objects, e.g. you
+     * might not want to close file handles that are still used by other tasks.
+     *
+     * @return $this
+     */
+    public function setSync(bool $sync = true): static;
 }
