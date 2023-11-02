@@ -38,6 +38,10 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
         }
         set_error_handler($this->handleError(...), E_ALL);
         $this->setReady();
+
+        // Force loading of PhpError class, because it might not be possible to load the class in the
+        // error handler, e.g. when the open files limit is reached
+        class_exists(PhpError::class);
     }
 
     /**
