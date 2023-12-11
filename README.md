@@ -39,6 +39,7 @@ Tasks can communicate back to the main process during execution and handle resul
   * [Defining workers manually](#defining-workers-manually)
   * [Defining workers automatically](#defining-workers-automatically)
   * [Defining workers using environment variables](#defining-workers-using-environment-variables)
+  * [Init tasks](#init-tasks)
 * [Running tasks](#running-tasks)
   * [Configuring the taskmaster](#configuring-the-taskmaster)
     * [Bootstrap file](#bootstrap-file)
