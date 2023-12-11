@@ -6,6 +6,8 @@ use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Exception\TaskTimeoutException;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Util\Task\EmptyTask;
+use Aternos\Taskmaster\Test\Util\Task\InitTask;
+use Aternos\Taskmaster\Test\Util\Task\InitValidateTask;
 use Aternos\Taskmaster\Test\Util\Task\InterruptableSleepTask;
 use Aternos\Taskmaster\Test\Util\Task\SleepTask;
 use Aternos\Taskmaster\Test\Util\Task\SyncTask;
@@ -81,5 +83,21 @@ abstract class AsyncWorkerTestCase extends WorkerTestCase
             }
         }
         $this->assertEquals(6, $counter);
+    }
+
+    public function testInitTask(): void
+    {
+        $this->taskmaster = new Taskmaster();
+        $this->taskmaster->setDefaultInitTask(InitTask::class);
+        $this->taskmaster->addWorkers($this->createWorker(), 3);
+
+        $this->addTasks(new InitValidateTask(), 3);
+        $counter = 0;
+        foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
+            $this->assertNull($task->getError());
+            $this->assertTrue($task->getResult());
+            $counter++;
+        }
+        $this->assertEquals(3, $counter);
     }
 }

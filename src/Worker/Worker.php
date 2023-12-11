@@ -5,6 +5,7 @@ namespace Aternos\Taskmaster\Worker;
 use Aternos\Taskmaster\Proxy\ProxiedSocket;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Proxy\ProxyStatus;
+use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\TaskmasterOptions;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
@@ -32,6 +33,8 @@ abstract class Worker implements WorkerInterface
     protected ?ProxyInterface $proxy = null;
     protected bool $instanceStarted = false;
     protected ?TaskInterface $queuedTask = null;
+    protected ?TaskFactoryInterface $initTaskFactory = null;
+    protected ?TaskInterface $initTask = null;
 
     /**
      * @inheritDoc
@@ -49,6 +52,26 @@ abstract class Worker implements WorkerInterface
     {
         if ($this->options === null) {
             $this->setOptions($options);
+        }
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setInitTaskFactory(?TaskFactoryInterface $initTaskFactory): static
+    {
+        $this->initTaskFactory = $initTaskFactory;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setInitTaskFactoryIfNecessary(?TaskFactoryInterface $initTaskFactory): static
+    {
+        if ($this->initTaskFactory === null) {
+            $this->setInitTaskFactory($initTaskFactory);
         }
         return $this;
     }
@@ -86,6 +109,11 @@ abstract class Worker implements WorkerInterface
     {
         $this->instanceStarted = true;
         $instance = $this->getInstance();
+
+        if ($this->initTaskFactory) {
+            $this->initTask = $this->initTaskFactory->createNextTask(null);
+        }
+
         if (!$this->proxy) {
             $instance->init()->start();
             return;
@@ -115,7 +143,10 @@ abstract class Worker implements WorkerInterface
         }
         $instance->update();
         if ($instance->getStatus() === WorkerInstanceStatus::IDLE) {
-            if ($this->queuedTask) {
+            if ($this->initTask) {
+                $instance->runTask($this->initTask);
+                $this->initTask = null;
+            } elseif ($this->queuedTask) {
                 $instance->runTask($this->queuedTask);
                 $this->queuedTask = null;
             } else {

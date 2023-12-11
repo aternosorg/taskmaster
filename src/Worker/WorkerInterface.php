@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Worker;
 
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
+use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\TaskmasterOptions;
@@ -61,6 +62,28 @@ interface WorkerInterface
      * @return $this
      */
     public function setOptionsIfNecessary(TaskmasterOptions $options): static;
+
+    /**
+     * Set the init task factory for the worker
+     *
+     * Init tasks are executed once as first task on every worker instance to initialize the worker.
+     *
+     * @param TaskFactoryInterface|null $initTaskFactory
+     * @return $this
+     */
+    public function setInitTaskFactory(?TaskFactoryInterface $initTaskFactory): static;
+
+    /**
+     * Set the init task factory for the worker if necessary
+     *
+     * If the init task factory is already set, it will not be overwritten.
+     * This is called by {@link Taskmaster::addWorker()}.
+     * If you want to set a different init task factory, call this before adding the worker.
+     *
+     * @param TaskFactoryInterface|null $initTaskFactory
+     * @return $this
+     */
+    public function setInitTaskFactoryIfNecessary(?TaskFactoryInterface $initTaskFactory): static;
 
     /**
      * Update the worker and its instance

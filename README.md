@@ -553,6 +553,24 @@ $taskmaster->autoDetectWorkers(4, false);
 $taskmaster->autoDetectWorkers(4, true, false);
 ```
 
+### Init tasks
+
+You can define tasks that are executed on every worker instance before the first task is executed.
+This is helpful to run some initial setup or (in case of the [`ForkWorker`](src/Environment/Fork/ForkWorker.php))
+to clear some variables that are inherited from the parent process, e.g. database connections.
+
+```php
+// init tasks are always provided by a task factory
+$taskmaster->setDefaultInitTaskFactory(new InitTaskFactory());
+
+// but taskmaster can create task factories automatically by cloning or instancing a task
+$taskmaster->setDefaultInitTask(new InitTask());
+$taskmaster->setDefaultInitTask(InitTask::class);
+
+// you can also define a task factory for a specific worker
+$worker->setInitTaskFactory(new InitTaskFactory());
+```
+
 ## Running tasks
 
 After writing your tasks, creating them and defining the workers, you can start running the tasks.

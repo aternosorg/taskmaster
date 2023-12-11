@@ -12,6 +12,8 @@ use Aternos\Taskmaster\Environment\Thread\ThreadWorker;
 use Aternos\Taskmaster\Proxy\ProcessProxy;
 use Aternos\Taskmaster\Proxy\ProxyInterface;
 use Aternos\Taskmaster\Proxy\ProxyStatus;
+use Aternos\Taskmaster\Task\CloneTaskFactory;
+use Aternos\Taskmaster\Task\InstanceTaskFactory;
 use Aternos\Taskmaster\Task\TaskFactoryInterface;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Worker\SocketWorkerInterface;
@@ -64,6 +66,7 @@ class Taskmaster
 
     protected TaskmasterOptions $options;
     protected float $defaultTaskTimeout = 0;
+    protected ?TaskFactoryInterface $initTaskFactory = null;
 
     /**
      * Taskmaster constructor
@@ -389,6 +392,7 @@ class Taskmaster
         }
 
         $worker->setOptionsIfNecessary($this->options);
+        $worker->setInitTaskFactoryIfNecessary($this->initTaskFactory);
         $this->workers[] = $worker;
         return $this;
     }
@@ -559,6 +563,44 @@ class Taskmaster
         }
         $this->defaultTaskTimeout = $timeout;
         return $this;
+    }
+
+    /**
+     * Set the default init task factory for all workers
+     *
+     * The init task factory produces tasks that are executed once as first task on every worker instance
+     * to initialize the worker.
+     *
+     * You can also set the init task factory for each worker individually with {@link WorkerInterface::setInitTaskFactory()}.
+     *
+     * @param TaskFactoryInterface|null $initTaskFactory
+     * @return $this
+     */
+    public function setDefaultInitTaskFactory(?TaskFactoryInterface $initTaskFactory): static
+    {
+        $this->initTaskFactory = $initTaskFactory;
+        return $this;
+    }
+
+    /**
+     * Set the default init task for all workers
+     *
+     * The init task is executed once as first task on every worker instance.
+     * This automatically creates a task factory that produces the init tasks.
+     *
+     * If you pass an object, the task will be cloned for each worker instance, if you pass
+     * a class name, a new instance of the class will be created for each worker instance.
+     *
+     * @param TaskInterface|class-string<TaskInterface> $task
+     * @return void
+     */
+    public function setDefaultInitTask(TaskInterface|string $task): void
+    {
+        if (is_string($task)) {
+            $this->initTaskFactory = new InstanceTaskFactory($task);
+        } else {
+            $this->initTaskFactory = new CloneTaskFactory($task);
+        }
     }
 
     /**
