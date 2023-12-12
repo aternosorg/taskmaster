@@ -592,15 +592,17 @@ class Taskmaster
      * a class name, a new instance of the class will be created for each worker instance.
      *
      * @param TaskInterface|class-string<TaskInterface> $task
-     * @return void
+     * @return $this
      */
-    public function setDefaultInitTask(TaskInterface|string $task): void
+    public function setDefaultInitTask(TaskInterface|string $task): static
     {
         if (is_string($task)) {
             $this->initTaskFactory = new InstanceTaskFactory($task);
         } else {
             $this->initTaskFactory = new CloneTaskFactory($task);
         }
+
+        return $this;
     }
 
     /**
