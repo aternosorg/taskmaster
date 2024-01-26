@@ -53,13 +53,6 @@ class Socket implements SocketInterface, SelectableSocketInterface
     {
         foreach ($this->receiveRaw() as $data) {
             yield unserialize($data);
-            $error = error_get_last();
-            if ($error && str_starts_with($error["message"], "unserialize(): Error at offset")) {
-                fwrite(STDERR, getmypid() . ": Unserialize error: " . $error["message"] . PHP_EOL);
-                fwrite(STDERR, getmypid() . ": Unserialize length: " . strlen($data) . PHP_EOL);
-                fwrite(STDERR, getmypid() . ": Unserialize data: " . $data . PHP_EOL);
-                error_clear_last();
-            }
         }
     }
 
