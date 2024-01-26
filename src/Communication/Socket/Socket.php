@@ -5,6 +5,7 @@ namespace Aternos\Taskmaster\Communication\Socket;
 use Aternos\Taskmaster\Communication\MessageInterface;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
+use Aternos\Taskmaster\Taskmaster;
 use Generator;
 
 /**
@@ -21,6 +22,8 @@ class Socket implements SocketInterface, SelectableSocketInterface
      * @var resource
      */
     protected mixed $socket;
+
+    protected string $receiveBuffer = "";
 
     /**
      * @param resource|Socket $socket
@@ -62,10 +65,23 @@ class Socket implements SocketInterface, SelectableSocketInterface
             if (!is_resource($this->socket) || feof($this->socket)) {
                 throw new SocketReadException("Could not read from socket.");
             }
-            $result = fgets($this->socket);
+            $result = $this->receiveBuffer;
+            do {
+                $chunk = fgets($this->socket, 10_001);
+                if ($chunk === false || strlen($chunk) === 0) {
+                    break;
+                }
+
+                $result .= $chunk;
+            } while (!str_ends_with($result, PHP_EOL));
             if (!$result) {
                 break;
             }
+            if (!str_ends_with($result, PHP_EOL)) {
+                $this->receiveBuffer = $result;
+                break;
+            }
+            $this->receiveBuffer = "";
             $decoded = base64_decode($result);
             yield $decoded;
         } while (true);
@@ -102,18 +118,22 @@ class Socket implements SocketInterface, SelectableSocketInterface
         }
         $data = base64_encode($data);
         $data .= PHP_EOL;
-        $total = 0;
-        $expected = strlen($data);
+        $current = 0;
+        $total = strlen($data);
         do {
             if (!is_resource($this->socket) || feof($this->socket)) {
                 throw new SocketWriteException("Could not write to socket.");
             }
-            $result = @fwrite($this->socket, $data);
-            if ($result === false || $result === 0) {
+            $chunk = substr($data, $current, 10_000);
+            $result = @fwrite($this->socket, $chunk);
+            if ($result === false) {
                 throw new SocketWriteException("Could not write to socket.");
             }
-            $total += $result;
-        } while ($total < $expected);
+            if ($result === 0) {
+                usleep(Taskmaster::SOCKET_WAIT_TIME);
+            }
+            $current += $result;
+        } while ($current < $total);
         return true;
     }
 
