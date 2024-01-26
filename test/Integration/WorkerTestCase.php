@@ -8,6 +8,7 @@ use Aternos\Taskmaster\Test\Util\Task\AdditionTask;
 use Aternos\Taskmaster\Test\Util\Task\CallbackTask;
 use Aternos\Taskmaster\Test\Util\Task\ChildExceptionTask;
 use Aternos\Taskmaster\Test\Util\Task\EmptyTask;
+use Aternos\Taskmaster\Test\Util\Task\LargeTask;
 use Aternos\Taskmaster\Test\Util\Task\ParentExceptionTask;
 use Aternos\Taskmaster\Test\Util\Task\SynchronizedFieldTask;
 use Aternos\Taskmaster\Test\Util\Task\UnsynchronizedFieldTask;
@@ -66,6 +67,14 @@ abstract class WorkerTestCase extends TestCase
         $this->taskmaster->runTask($task);
         $this->taskmaster->wait();
         $this->assertEquals(3, $task->getResult());
+    }
+
+    public function testRunLargeTask(): void
+    {
+        $task = new LargeTask(1_000_000);
+        $this->taskmaster->runTask($task);
+        $this->taskmaster->wait();
+        $this->assertEquals(1_000_000, strlen($task->getResult()));
     }
 
     public function testGetTaskResultFromPromise(): void
