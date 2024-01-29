@@ -465,7 +465,7 @@ class Taskmaster
         if (!$worker) {
             if (extension_loaded("pcntl")) {
                 $worker = new ForkWorker();
-            } elseif (function_exists("proc_open")) {
+            } elseif (function_exists("proc_open") && PHP_OS_FAMILY !== "Windows") {
                 $worker = new ProcessWorker();
             } else {
                 $worker = new SyncWorker();

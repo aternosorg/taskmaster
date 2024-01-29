@@ -15,6 +15,9 @@ on a webserver.
 
 Tasks can communicate back to the main process during execution and handle results and errors gracefully.
 
+This library is not supported on Windows due to a lack of essential features. The autodetect falls back to the
+sync worker on Windows, so running tasks should be possible, but running tasks in parallel does not work.
+
 <!-- TOC -->
 * [Installation](#installation)
 * [Basic Example](#basic-example)
