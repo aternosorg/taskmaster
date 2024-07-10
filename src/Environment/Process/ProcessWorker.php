@@ -17,6 +17,14 @@ use Aternos\Taskmaster\Worker\SocketWorker;
 class ProcessWorker extends SocketWorker
 {
     /**
+     * @return bool
+     */
+    public static function isSupported(): bool
+    {
+        return function_exists("proc_open") && PHP_OS_FAMILY !== "Windows";
+    }
+
+    /**
      * @return ProcessWorkerInstance
      */
     public function createInstance(): ProcessWorkerInstance

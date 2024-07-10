@@ -340,7 +340,6 @@ class Taskmaster
      *
      * @param SocketInterface|null $socket
      * @return resource|null
-     * @noinspection PhpMixedReturnTypeCanBeReducedInspection
      */
     protected function getSelectableReadStreamFromSocket(?SocketInterface $socket): mixed
     {
@@ -463,9 +462,9 @@ class Taskmaster
         }
 
         if (!$worker) {
-            if (extension_loaded("pcntl")) {
+            if (ForkWorker::isSupported()) {
                 $worker = new ForkWorker();
-            } elseif (function_exists("proc_open") && PHP_OS_FAMILY !== "Windows") {
+            } elseif (ProcessWorker::isSupported()) {
                 $worker = new ProcessWorker();
             } else {
                 $worker = new SyncWorker();
