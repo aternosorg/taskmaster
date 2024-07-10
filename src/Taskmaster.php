@@ -602,6 +602,10 @@ class Taskmaster
             $this->initTaskFactory = new CloneTaskFactory($task);
         }
 
+        foreach ($this->workers as $worker) {
+            $worker->setInitTaskFactoryIfNecessary($this->initTaskFactory);
+        }
+
         return $this;
     }
 

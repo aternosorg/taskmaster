@@ -100,4 +100,20 @@ abstract class AsyncWorkerTestCase extends WorkerTestCase
         }
         $this->assertEquals(3, $counter);
     }
+
+    public function testInitTaskAfterWorkerCreation(): void
+    {
+        $this->taskmaster = new Taskmaster();
+        $this->taskmaster->addWorkers($this->createWorker(), 3);
+        $this->taskmaster->setDefaultInitTask(InitTask::class);
+
+        $this->addTasks(new InitValidateTask(), 3);
+        $counter = 0;
+        foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
+            $this->assertNull($task->getError());
+            $this->assertTrue($task->getResult());
+            $counter++;
+        }
+        $this->assertEquals(3, $counter);
+    }
 }
