@@ -4,7 +4,7 @@ namespace Aternos\Taskmaster\Communication;
 
 class StdStreams
 {
-    protected static self $instance;
+    protected static ?self $instance = null;
 
     /**
      * @var resource|null
@@ -26,7 +26,7 @@ class StdStreams
      */
     public static function getInstance(): static
     {
-        if (!isset(self::$instance)) {
+        if (self::$instance === null) {
             self::$instance = new static();
         }
         return self::$instance;
