@@ -4,6 +4,7 @@ namespace Aternos\Taskmaster\Runtime;
 
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
+use Aternos\Taskmaster\Communication\StdStreams;
 use Aternos\Taskmaster\TaskmasterOptions;
 
 /**
@@ -33,15 +34,16 @@ class RuntimeProcess
     {
         $socketPair = new SocketPair();
         $this->socket = $socketPair->getParentSocket();
+        $stdStreams = StdStreams::getInstance();
         $this->process = proc_open([
             $options->getPhpExecutable(),
             static::BIN_PATH,
             $options->getBootstrap(),
             $runtimeClass
         ], [
-            0 => STDIN,
-            1 => STDOUT,
-            2 => STDERR,
+            0 => $stdStreams->getStdin(),
+            1 => $stdStreams->getStdout(),
+            2 => $stdStreams->getStderr(),
             3 => $socketPair->getChildSocket()->getStream(),
         ], $pipes);
         $socketPair->closeChildSocket();
