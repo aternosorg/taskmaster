@@ -8,6 +8,7 @@ use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\Socket;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
 use Aternos\Taskmaster\Communication\Socket\SocketInterface;
+use Aternos\Taskmaster\Communication\StdStreams;
 use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Exception\PhpFatalErrorException;
 use Aternos\Taskmaster\Taskmaster;
@@ -102,7 +103,7 @@ class SocketRuntime extends Runtime implements AsyncRuntimeInterface
         if ($reason instanceof Exception) {
             $reason = $reason->getMessage();
         }
-        fwrite(STDERR, "Runtime failed: " . $reason . PHP_EOL);
+        fwrite(StdStreams::getInstance()->getStderr(), "Runtime failed: " . $reason . PHP_EOL);
         exit(1);
     }
 }
