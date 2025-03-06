@@ -12,6 +12,7 @@ use Aternos\Taskmaster\Communication\Socket\Exception\SocketReadException;
 use Aternos\Taskmaster\Communication\Socket\Exception\SocketWriteException;
 use Aternos\Taskmaster\Communication\Socket\SelectableSocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketCommunicatorTrait;
+use Aternos\Taskmaster\Communication\StdStreams;
 use Aternos\Taskmaster\Runtime\AsyncRuntimeInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Worker\Instance\ProxyableWorkerInstanceInterface;
@@ -244,7 +245,7 @@ class ProxyRuntime implements AsyncRuntimeInterface
         if ($reason instanceof Exception) {
             $reason = $reason->getMessage();
         }
-        fwrite(STDERR, "Proxy runtime failed: " . $reason . PHP_EOL);
+        fwrite(StdStreams::getInstance()->getStderr(), "Proxy runtime failed: " . $reason . PHP_EOL);
         exit(1);
     }
 }

@@ -6,6 +6,7 @@ use Aternos\Taskmaster\Communication\Promise\ResponseDataPromise;
 use Aternos\Taskmaster\Communication\Promise\TaskPromise;
 use Aternos\Taskmaster\Communication\Request\ExecuteFunctionRequest;
 use Aternos\Taskmaster\Communication\ResponseInterface;
+use Aternos\Taskmaster\Communication\StdStreams;
 use Aternos\Taskmaster\Exception\PhpError;
 use Aternos\Taskmaster\Runtime\RuntimeInterface;
 use Closure;
@@ -175,7 +176,7 @@ abstract class Task implements TaskInterface
     public function handleError(Exception $error): void
     {
         $this->error = $error;
-        fwrite(STDERR, $error->getMessage() . PHP_EOL);
+        fwrite(StdStreams::getInstance()->getStderr(), $error->getMessage() . PHP_EOL);
     }
 
     /**
