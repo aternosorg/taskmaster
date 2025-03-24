@@ -2,12 +2,15 @@
 
 namespace Aternos\Taskmaster\Test\Integration;
 
+use Aternos\Taskmaster\Task\InstanceTaskFactory;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Util\Task\AdditionTask;
 use Aternos\Taskmaster\Test\Util\Task\CallbackTask;
 use Aternos\Taskmaster\Test\Util\Task\ChildExceptionTask;
 use Aternos\Taskmaster\Test\Util\Task\EmptyTask;
+use Aternos\Taskmaster\Test\Util\Task\LargeChildTask;
+use Aternos\Taskmaster\Test\Util\Task\LargeParentTask;
 use Aternos\Taskmaster\Test\Util\Task\LargeTask;
 use Aternos\Taskmaster\Test\Util\Task\ParentExceptionTask;
 use Aternos\Taskmaster\Test\Util\Task\SynchronizedFieldTask;
@@ -75,6 +78,28 @@ abstract class WorkerTestCase extends TestCase
         $this->taskmaster->runTask($task);
         $this->taskmaster->wait();
         $this->assertEquals(1_000_000, strlen($task->getResult()));
+    }
+
+    public function testRunManyLargeParentTasks(): void
+    {
+        $count = 0;
+        $taskFactory = new InstanceTaskFactory(LargeParentTask::class, 2_000);
+        $this->taskmaster->addTaskFactory($taskFactory);
+        foreach($this->taskmaster->waitAndHandleTasks() as $task) {
+            $count++;
+        }
+        $this->assertEquals(2_000, $count);
+    }
+
+    public function testRunManyLargeChildTasks(): void
+    {
+        $count = 0;
+        $taskFactory = new InstanceTaskFactory(LargeChildTask::class, 2_000);
+        $this->taskmaster->addTaskFactory($taskFactory);
+        foreach($this->taskmaster->waitAndHandleTasks() as $task) {
+            $count++;
+        }
+        $this->assertEquals(2_000, $count);
     }
 
     public function testGetTaskResultFromPromise(): void

@@ -57,6 +57,9 @@ class Promise
      */
     public function then(Closure $callback): static
     {
+        if ($this->failed) {
+            return $this;
+        }
         if ($this->resolved) {
             $callback($this->value, ...$this->getAdditionalResolveArguments());
             return $this;
@@ -78,6 +81,9 @@ class Promise
      */
     public function catch(Closure $callback): static
     {
+        if ($this->resolved) {
+            return $this;
+        }
         if ($this->failed) {
             $callback($this->exception, ...$this->getAdditionalRejectArguments());
             return $this;
@@ -110,6 +116,7 @@ class Promise
         foreach ($this->fibers as $fiber) {
             $fiber->resume($value);
         }
+        $this->clearAfterResolveOrReject();
         return $this;
     }
 
@@ -140,7 +147,21 @@ class Promise
         foreach ($this->fibers as $fiber) {
             $fiber->throw($exception);
         }
+        $this->clearAfterResolveOrReject();
         return $this;
+    }
+
+    /**
+     * Clear all success and exception handlers
+     *
+     * Frees up memory and removes references to avoid potential circular references.
+     *
+     * @return void
+     */
+    protected function clearAfterResolveOrReject(): void
+    {
+        $this->successHandlers = [];
+        $this->exceptionHandlers = [];
     }
 
     /**
