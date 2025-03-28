@@ -2,12 +2,18 @@
 
 namespace Aternos\Taskmaster\Test\Integration;
 
+use Aternos\Taskmaster\Task\InstanceTaskFactory;
 use Aternos\Taskmaster\Task\TaskInterface;
 use Aternos\Taskmaster\Taskmaster;
 use Aternos\Taskmaster\Test\Util\Task\AdditionTask;
 use Aternos\Taskmaster\Test\Util\Task\CallbackTask;
 use Aternos\Taskmaster\Test\Util\Task\ChildExceptionTask;
+use Aternos\Taskmaster\Test\Util\Task\DestructChildTask;
+use Aternos\Taskmaster\Test\Util\Task\DestructParentTask;
+use Aternos\Taskmaster\Test\Util\Task\DestructRegistry;
 use Aternos\Taskmaster\Test\Util\Task\EmptyTask;
+use Aternos\Taskmaster\Test\Util\Task\LargeChildTask;
+use Aternos\Taskmaster\Test\Util\Task\LargeParentTask;
 use Aternos\Taskmaster\Test\Util\Task\LargeTask;
 use Aternos\Taskmaster\Test\Util\Task\ParentExceptionTask;
 use Aternos\Taskmaster\Test\Util\Task\SynchronizedFieldTask;
@@ -77,6 +83,30 @@ abstract class WorkerTestCase extends TestCase
         $this->assertEquals(1_000_000, strlen($task->getResult()));
     }
 
+    public function testRunManyLargeParentTasks(): void
+    {
+        $count = 0;
+        $taskFactory = new InstanceTaskFactory(LargeParentTask::class, 2_000);
+        $this->taskmaster->addTaskFactory($taskFactory);
+        foreach($this->taskmaster->waitAndHandleTasks() as $task) {
+            $count++;
+        }
+        $this->taskmaster->stop();
+        $this->assertEquals(2_000, $count);
+    }
+
+    public function testRunManyLargeChildTasks(): void
+    {
+        $count = 0;
+        $taskFactory = new InstanceTaskFactory(LargeChildTask::class, 2_000);
+        $this->taskmaster->addTaskFactory($taskFactory);
+        foreach($this->taskmaster->waitAndHandleTasks() as $task) {
+            $count++;
+        }
+        $this->taskmaster->stop();
+        $this->assertEquals(2_000, $count);
+    }
+
     public function testGetTaskResultFromPromise(): void
     {
         $task = new AdditionTask(1, 2);
@@ -96,6 +126,36 @@ abstract class WorkerTestCase extends TestCase
         foreach ($tasks as $task) {
             $this->assertEquals(3, $task->getResult());
         }
+    }
+
+    public function testParentDestructMultipleTasks(): void
+    {
+        DestructRegistry::clear();
+        $this->assertEquals(0, DestructRegistry::count());
+        $taskFactory = new InstanceTaskFactory(DestructParentTask::class, 100);
+        $this->taskmaster->addTaskFactory($taskFactory);
+        do {
+            $tasks = $this->taskmaster->update();
+            $ids = array_map(fn($task) => spl_object_id($task), $tasks);
+            unset($tasks);
+            foreach ($ids as $id) {
+                $this->assertFalse(DestructRegistry::has($id));
+            }
+        } while ($this->taskmaster->isWorking());
+        $this->taskmaster->stop();
+        $this->assertEquals(0, DestructRegistry::count());
+    }
+
+    public function testChildDestructMultipleTasks(): void
+    {
+        DestructRegistry::clear();
+        $taskFactory = new InstanceTaskFactory(DestructChildTask::class, 100);
+        $this->taskmaster->addTaskFactory($taskFactory);
+        foreach ($this->taskmaster->waitAndHandleTasks() as $task) {
+            $this->assertEquals(0, $task->getResult());
+            unset($task);
+        }
+        $this->taskmaster->stop();
     }
 
     public function testGetMultipleTasksFromWaitGenerator(): void

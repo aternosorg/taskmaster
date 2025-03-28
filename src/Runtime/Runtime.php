@@ -75,8 +75,10 @@ abstract class Runtime implements RuntimeInterface
             }
             $result = $fiber->getReturn();
         } catch (Exception $exception) {
+            $this->currentTaskRequest = null;
             return (new ExceptionResponse($request->getRequestId(), $exception))->loadFromTask($request->task);
         }
+        $this->currentTaskRequest = null;
         return (new TaskResponse($request->getRequestId(), $result))->loadFromTask($request->task);
     }
 }

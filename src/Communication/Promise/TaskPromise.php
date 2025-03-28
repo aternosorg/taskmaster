@@ -55,6 +55,15 @@ class TaskPromise extends Promise
     /**
      * @inheritDoc
      */
+    protected function clearAfterResolveOrReject(): void
+    {
+        parent::clearAfterResolveOrReject();
+        unset($this->task);
+    }
+
+    /**
+     * @inheritDoc
+     */
     protected function getAdditionalRejectArguments(): array
     {
         return [$this->task];

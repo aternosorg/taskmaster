@@ -21,6 +21,7 @@ class ErrorTask extends SuppressedErrorOutputTask
     #[OnChild]
     public function run(): void
     {
-        trigger_error($this->message, E_USER_ERROR);
+        // suppress deprecated warnings for now, not sure how to properly test this in the future
+        @trigger_error($this->message, E_USER_ERROR);
     }
 }
