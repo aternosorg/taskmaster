@@ -288,7 +288,7 @@ class Taskmaster
             usleep($time);
             return;
         }
-        stream_select($streams, $write, $except, 0, $time);
+        @stream_select($streams, $write, $except, 0, $time);
     }
 
     /**
