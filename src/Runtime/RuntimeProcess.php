@@ -6,6 +6,7 @@ use Aternos\Taskmaster\Communication\Socket\SocketInterface;
 use Aternos\Taskmaster\Communication\Socket\SocketPair;
 use Aternos\Taskmaster\Communication\StdStreams;
 use Aternos\Taskmaster\TaskmasterOptions;
+use RuntimeException;
 
 /**
  * Class RuntimeProcess
@@ -46,6 +47,9 @@ class RuntimeProcess
             2 => $stdStreams->getStderr(),
             3 => $socketPair->getChildSocket()->getStream(),
         ], $pipes);
+        if (!$this->process) {
+            throw new RuntimeException("Could not open process.");
+        }
         $socketPair->closeChildSocket();
     }
 
@@ -57,6 +61,9 @@ class RuntimeProcess
     public function stop(): bool
     {
         $this->socket->close();
+        if (!$this->process) {
+            return false;
+        }
         $result = proc_terminate($this->process);
         proc_close($this->process);
         $this->process = null;
